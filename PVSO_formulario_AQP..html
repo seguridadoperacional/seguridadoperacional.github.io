@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Solicitud PVSO — Aeropuertos Andinos del Perú</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --aap-blue: #0D3B6E;
+  --aap-blue-mid: #185FA5;
+  --aap-blue-light: #E6F1FB;
+  --aap-gold: #C8960C;
+  --danger: #A32D2D;
+  --danger-bg: #FCEBEB;
+  --danger-border: #F09595;
+  --warning: #854F0B;
+  --warning-bg: #FAEEDA;
+  --warning-border: #EF9F27;
+  --success: #3B6D11;
+  --success-bg: #EAF3DE;
+  --success-border: #97C459;
+  --gray-50: #F7F6F3;
+  --gray-100: #EEECEA;
+  --gray-200: #D5D3CE;
+  --gray-400: #9A9690;
+  --gray-600: #5F5D58;
+  --gray-900: #1C1C1A;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); font-size: 15px; line-height: 1.6; }
+.header { background: var(--aap-blue); }
+.header-inner { max-width: 820px; margin: 0 auto; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.header-logo { width: 44px; height: 44px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-text h1 { color: white; font-size: 15px; font-weight: 600; }
+.header-text p { color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 1px; }
+.header-strip { background: var(--aap-gold); height: 3px; }
+.page { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.intro-card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.5rem 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm); }
+.intro-card h2 { font-size: 17px; font-weight: 600; color: var(--aap-blue); margin-bottom: 0.5rem; }
+.intro-card p { font-size: 14px; color: var(--gray-600); line-height: 1.65; }
+.tiempos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1.25rem; }
+.tiempo-item { background: var(--gray-50); border: 0.5px solid var(--gray-200); border-radius: var(--radius); padding: 0.75rem 1rem; }
+.tiempo-tipo { font-size: 12px; font-weight: 600; color: var(--aap-blue); text-transform: uppercase; }
+.tiempo-desc { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+.tiempo-plazo { font-size: 13px; font-weight: 600; color: var(--aap-gold); margin-top: 6px; }
+.section-card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); }
+.section-title { font-size: 13px; font-weight: 600; color: var(--aap-blue-mid); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 0.5px solid var(--gray-100); display: flex; align-items: center; gap: 8px; }
+.section-title::before { content: ''; width: 3px; height: 16px; background: var(--aap-gold); border-radius: 2px; flex-shrink: 0; }
+.field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.field-group.full { grid-template-columns: 1fr; }
+.field-group.three { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+label span.req { color: var(--danger); margin-left: 2px; }
+input[type=text], input[type=email], input[type=datetime-local], input[type=number], select, textarea {
+  border: 0.5px solid var(--gray-200); border-radius: var(--radius);
+  padding: 0.55rem 0.75rem; font-size: 14px; font-family: inherit;
+  color: var(--gray-900); background: white; width: 100%; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--aap-blue-mid); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
+input.auto-filled { background: var(--aap-blue-light); border-color: var(--aap-blue-mid); color: var(--aap-blue); font-weight: 500; }
+textarea { resize: vertical; min-height: 70px; }
+select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239A9690' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; }
+.map-instruction { font-size: 13px; color: var(--gray-600); margin-bottom: 1rem; background: var(--aap-blue-light); border: 0.5px solid #B5D4F4; border-radius: var(--radius); padding: 0.65rem 1rem; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+.map-instruction svg { flex-shrink: 0; margin-top: 2px; color: var(--aap-blue-mid); }
+#map { width: 100%; height: 440px; border-radius: var(--radius); border: 0.5px solid var(--gray-200); }
+.map-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 0.75rem; }
+.leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-600); }
+.leg-sq { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+#zone-panel { margin-top: 1rem; display: none; }
+.zone-alert { border-radius: var(--radius); padding: 1rem 1.25rem; border: 0.5px solid; }
+.zone-alert.crit { background: var(--danger-bg); border-color: var(--danger-border); }
+.zone-alert.min { background: var(--success-bg); border-color: var(--success-border); }
+.zone-alert.crit-menor { background: var(--warning-bg); border-color: var(--warning-border); }
+.zone-alert-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+.zone-name { font-size: 14px; font-weight: 600; }
+.zone-alert.crit .zone-name { color: var(--danger); }
+.zone-alert.min .zone-name { color: var(--success); }
+.zone-alert.crit-menor .zone-name { color: var(--warning); }
+.zone-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 100px; white-space: nowrap; }
+.zone-alert.crit .zone-badge { background: var(--danger); color: white; }
+.zone-alert.min .zone-badge { background: var(--success); color: white; }
+.zone-alert.crit-menor .zone-badge { background: var(--warning); color: white; }
+.zone-recs { font-size: 13px; line-height: 1.6; }
+.zone-recs-title { font-weight: 600; margin-bottom: 6px; color: var(--gray-600); font-size: 12px; text-transform: uppercase; }
+.zone-alert.crit .zone-recs-title { color: var(--danger); }
+.zone-alert.min .zone-recs-title { color: var(--success); }
+.zone-alert.crit-menor .zone-recs-title { color: var(--warning); }
+.rec { display: flex; gap: 7px; margin-bottom: 5px; }
+.rec-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+.zone-alert.crit .rec-dot { background: var(--danger); }
+.zone-alert.min .rec-dot { background: var(--success); }
+.zone-alert.crit-menor .rec-dot { background: var(--warning); }
+.tipo-auto-note { font-size: 12px; margin-top: 4px; color: var(--aap-blue-mid); font-style: italic; }
+.file-upload { border: 1.5px dashed var(--gray-200); border-radius: var(--radius); padding: 1.25rem; text-align: center; cursor: pointer; background: var(--gray-50); }
+.file-upload:hover { border-color: var(--aap-blue-mid); background: var(--aap-blue-light); }
+.file-upload input { display: none; }
+.file-upload-label { font-size: 13px; color: var(--gray-600); cursor: pointer; display: block; }
+.file-upload-label strong { color: var(--aap-blue-mid); }
+#file-name { font-size: 13px; color: var(--success); margin-top: 6px; font-weight: 500; display: none; }
+.submit-area { margin-top: 1.5rem; }
+.btn-submit { width: 100%; background: var(--aap-blue); color: white; border: none; border-radius: var(--radius); padding: 0.9rem 1.5rem; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+.btn-submit:hover { background: #0A2E58; }
+.btn-submit:disabled { background: var(--gray-400); cursor: not-allowed; }
+.submit-note { font-size: 12px; color: var(--gray-400); text-align: center; margin-top: 0.75rem; }
+#success-screen { display: none; background: white; border-radius: 12px; border: 0.5px solid var(--success-border); padding: 3rem 2rem; text-align: center; box-shadow: var(--shadow-sm); }
+#success-screen .check { width: 56px; height: 56px; background: var(--success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; }
+#success-screen h2 { font-size: 20px; font-weight: 600; color: var(--success); margin-bottom: 0.5rem; }
+#success-screen p { font-size: 14px; color: var(--gray-600); max-width: 420px; margin: 0 auto; }
+#success-screen .ref { font-size: 13px; margin-top: 1rem; background: var(--gray-50); border-radius: var(--radius); padding: 0.5rem 1rem; display: inline-block; color: var(--gray-600); }
+#success-screen .ref strong { color: var(--gray-900); }
+.btn-new { margin-top: 1.5rem; background: none; border: 0.5px solid var(--aap-blue); color: var(--aap-blue); border-radius: var(--radius); padding: 0.65rem 1.25rem; font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; }
+.btn-new:hover { background: var(--aap-blue-light); }
+input.error, select.error, textarea.error { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(163,45,45,0.1); }
+.error-msg { font-size: 12px; color: var(--danger); margin-top: 3px; display: none; }
+.error-msg.visible { display: block; }
+#no-zone-msg { display: none; font-size: 13px; color: var(--warning); background: var(--warning-bg); border: 0.5px solid var(--warning-border); border-radius: var(--radius); padding: 0.65rem 1rem; margin-top: 0.75rem; }
+.carta-box { background: var(--gray-50); border: 0.5px solid var(--gray-200); border-radius: var(--radius); padding: 1.25rem; max-height: 280px; overflow-y: auto; font-size: 13px; color: var(--gray-600); line-height: 1.7; margin-bottom: 1rem; }
+.carta-box h4 { font-size: 13px; color: var(--gray-900); margin-bottom: 8px; font-weight: 600; }
+.checkbox-row { display: flex; align-items: flex-start; gap: 10px; background: var(--aap-blue-light); border: 0.5px solid #B5D4F4; border-radius: var(--radius); padding: 0.85rem 1rem; }
+.checkbox-row input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--aap-blue-mid); cursor: pointer; }
+.checkbox-row label { font-size: 13px; color: var(--gray-900); font-weight: 400; cursor: pointer; line-height: 1.5; }
+.firma-box { margin-top: 1rem; border: 1.5px dashed var(--gray-200); border-radius: var(--radius); padding: 0.75rem; text-align: center; }
+canvas#firma-canvas { border: 0.5px solid var(--gray-200); border-radius: var(--radius); cursor: crosshair; touch-action: none; width: 100%; height: 120px; background: white; }
+.firma-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+.firma-actions span { font-size: 11px; color: var(--gray-400); }
+.btn-clear-firma { font-size: 12px; background: none; border: 0.5px solid var(--gray-200); border-radius: var(--radius); padding: 4px 10px; cursor: pointer; color: var(--gray-600); }
+@media (max-width: 600px) {
+  .field-group, .field-group.three { grid-template-columns: 1fr; }
+  .tiempos { grid-template-columns: 1fr; }
+  .header-inner { padding: 1rem 1.25rem; }
+  .page { padding: 1.25rem 1rem 3rem; }
+  .section-card, .intro-card { padding: 1.25rem; }
+}
+.leaflet-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+.leaflet-tooltip::before { display: none !important; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4L36 32H4L20 4Z" fill="#0D3B6E"/>
+        <path d="M20 10L32 30H8L20 10Z" fill="#185FA5"/>
+        <path d="M20 16L28 28H12L20 16Z" fill="#C8960C"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>Aeropuertos Andinos del Perú — SMS</h1>
+      <p>Solicitud de Plan de Vigilancia de Seguridad Operacional (PVSO)</p>
+    </div>
+  </div>
+  <div class="header-strip"></div>
+</div>
+
+<div class="page">
+
+  <div class="intro-card">
+    <h2>Plan de Vigilancia de Seguridad Operacional (PVSO)</h2>
+    <p>Si realizas actividades en el lado aire para ejecución de obras civiles, mantenimiento, reparaciones u otras que requieran presencia en el área de movimiento, debes cumplir los requisitos de seguridad operacional de acuerdo con la magnitud del trabajo. Tu solicitud será revisada y validada por el Supervisor de Lado Aire (SLA) de AAP, quien confirmará fecha, hora y condiciones de ingreso.</p>
+    <div class="tiempos">
+      <div class="tiempo-item">
+        <div class="tiempo-tipo">AME — Actividades menores</div>
+        <div class="tiempo-desc">Pintado, señalización, monitoreos, limpieza, etc.</div>
+        <div class="tiempo-plazo">Solicitar con 48 horas de anticipación</div>
+      </div>
+      <div class="tiempo-item">
+        <div class="tiempo-tipo">AMA — Actividades mayores</div>
+        <div class="tiempo-desc">Construcción, rehabilitación de pavimentos, bacheos mayores</div>
+        <div class="tiempo-plazo">Solicitar con 15 días de anticipación</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-form">
+
+    <div class="section-card">
+      <div class="section-title">Datos del solicitante</div>
+      <div class="field-group">
+        <div class="field">
+          <label for="ruc">RUC de la empresa <span class="req">*</span></label>
+          <input type="text" id="ruc" placeholder="20XXXXXXXXX" maxlength="11"/>
+          <span class="error-msg" id="err-ruc">Ingresa un RUC válido (11 dígitos)</span>
+        </div>
+        <div class="field">
+          <label for="empresa">Razón social de la empresa <span class="req">*</span></label>
+          <input type="text" id="empresa" placeholder="Ej. Constructora Andina S.A.C."/>
+          <span class="error-msg" id="err-empresa">Este campo es obligatorio</span>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="contacto">Nombres y apellidos del contacto <span class="req">*</span></label>
+          <input type="text" id="contacto" placeholder="Nombre completo"/>
+          <span class="error-msg" id="err-contacto">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="email">Correo electrónico <span class="req">*</span></label>
+          <input type="email" id="email" placeholder="correo@empresa.com"/>
+          <span class="error-msg" id="err-email">Ingresa un correo válido</span>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="aeropuerto">Aeropuerto <span class="req">*</span></label>
+          <select id="aeropuerto" onchange="onAirportChange()">
+            <option value="">Selecciona un aeropuerto</option>
+            <option value="AQP">Arequipa (AQP)</option>
+            <option value="AYP">Ayacucho (AYP)</option>
+            <option value="JUL">Juliaca (JUL)</option>
+            <option value="PEM">Puerto Maldonado (PEM)</option>
+            <option value="TCQ">Tacna (TCQ)</option>
+          </select>
+          <span class="error-msg" id="err-aeropuerto">Selecciona un aeropuerto</span>
+        </div>
+        <div class="field">
+          <label for="area-responsable">Área AAP responsable de supervisión <span class="req">*</span></label>
+          <select id="area-responsable">
+            <option value="">Selecciona un área</option>
+            <option value="Operaciones">Operaciones</option>
+            <option value="Seguridad Operacional (SMS)">Seguridad Operacional (SMS)</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Seguridad de la Aviación (AVSEC)">Seguridad de la Aviación (AVSEC)</option>
+          </select>
+          <span class="error-msg" id="err-area-responsable">Selecciona el área responsable</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-title">Naturaleza de la actividad</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:1rem">Esto define si tu solicitud requiere un PVSO completo o un registro simplificado de visita.</p>
+      <div class="field-group full">
+        <div class="field">
+          <label>Tipo de actividad <span class="req">*</span></label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;border:0.5px solid var(--gray-200);border-radius:var(--radius);padding:0.6rem 1rem;cursor:pointer;flex:1;min-width:200px" id="label-naturaleza-campo">
+              <input type="radio" name="naturaleza" id="naturaleza-campo" value="campo" onchange="onNaturalezaChange()" style="width:16px;height:16px;accent-color:var(--aap-blue-mid)"/>
+              <span><strong>Actividad de campo</strong><br/><span style="font-size:12px;color:var(--gray-600)">Uso de herramientas, equipos o maquinaria</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;border:0.5px solid var(--gray-200);border-radius:var(--radius);padding:0.6rem 1rem;cursor:pointer;flex:1;min-width:200px" id="label-naturaleza-visita">
+              <input type="radio" name="naturaleza" id="naturaleza-visita" value="visita" onchange="onNaturalezaChange()" style="width:16px;height:16px;accent-color:var(--aap-blue-mid)"/>
+              <span><strong>Administrativa / Visita</strong><br/><span style="font-size:12px;color:var(--gray-600)">Sin uso de herramientas — reuniones, inspecciones, capacitaciones</span></span>
+            </label>
+          </div>
+          <span class="error-msg" id="err-naturaleza">Selecciona el tipo de actividad</span>
+        </div>
+      </div>
+
+      <div id="desplazamiento-block" style="display:none;margin-top:1rem">
+        <div class="field">
+          <label>¿Cómo te desplazarás dentro del aeropuerto? <span class="req">*</span></label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:5px">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;border:0.5px solid var(--gray-200);border-radius:var(--radius);padding:0.6rem 1rem;cursor:pointer;flex:1;min-width:200px">
+              <input type="radio" name="desplazamiento" id="desplazamiento-pie" value="pie" onchange="onDesplazamientoChange()" style="width:16px;height:16px;accent-color:var(--aap-blue-mid)"/>
+              <span><strong>A pie, con guía de AAP</strong><br/><span style="font-size:12px;color:var(--gray-600)">No requiere PVSO completo</span></span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;font-size:13px;border:0.5px solid var(--gray-200);border-radius:var(--radius);padding:0.6rem 1rem;cursor:pointer;flex:1;min-width:200px">
+              <input type="radio" name="desplazamiento" id="desplazamiento-vehiculo" value="vehiculo" onchange="onDesplazamientoChange()" style="width:16px;height:16px;accent-color:var(--aap-blue-mid)"/>
+              <span><strong>Con vehículo propio</strong><br/><span style="font-size:12px;color:var(--gray-600)">Requiere PVSO completo</span></span>
+            </label>
+          </div>
+          <span class="error-msg" id="err-desplazamiento">Selecciona cómo te desplazarás</span>
+        </div>
+      </div>
+
+      <div id="visita-guiada-block" style="display:none;margin-top:1rem">
+        <div class="checkbox-row" style="background:var(--success-bg);border-color:var(--success-border);margin-bottom:1rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2" style="flex-shrink:0;margin-top:1px"><polyline points="20 6 9 17 4 12"/></svg>
+          <label style="cursor:default">Esta visita no requiere PVSO completo. Solo necesitamos los datos del guía de AAP que te acompañará y el motivo de la visita.</label>
+        </div>
+        <div class="field-group">
+          <div class="field">
+            <label for="guia-nombre">Nombre del guía / escolta de AAP <span class="req">*</span></label>
+            <input type="text" id="guia-nombre" placeholder="Nombre completo del personal de AAP"/>
+            <span class="error-msg" id="err-guia-nombre">Este campo es obligatorio</span>
+          </div>
+          <div class="field">
+            <label for="guia-area">Área de AAP a la que pertenece el guía <span class="req">*</span></label>
+            <select id="guia-area">
+              <option value="">Selecciona un área</option>
+              <option value="Operaciones">Operaciones</option>
+              <option value="Seguridad Operacional (SMS)">Seguridad Operacional (SMS)</option>
+              <option value="Mantenimiento">Mantenimiento</option>
+              <option value="Seguridad de la Aviación (AVSEC)">Seguridad de la Aviación (AVSEC)</option>
+            </select>
+            <span class="error-msg" id="err-guia-area">Selecciona el área del guía</span>
+          </div>
+        </div>
+        <div class="field-group full" style="margin-top:0">
+          <div class="field">
+            <label for="motivo-visita">Motivo específico de la visita <span class="req">*</span></label>
+            <textarea id="motivo-visita" placeholder="Ej. Capacitación de seguridad operacional, inspección visual de obras, reunión de coordinación..."></textarea>
+            <span class="error-msg" id="err-motivo-visita">Este campo es obligatorio</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="zona-section-card">
+      <div class="section-title">Zona de trabajo — selección en plano</div>
+      <div id="map-section-AQP">
+        <div class="map-instruction">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Haz clic sobre la zona del aeropuerto donde se realizará la actividad. El sistema identificará automáticamente si es zona crítica y pre-completará el tipo de actividad.
+        </div>
+        <div id="map"></div>
+        <div class="map-legend">
+          <div class="leg"><div class="leg-sq" style="background:#E24B4A"></div>RWY / Franja de seguridad</div>
+          <div class="leg"><div class="leg-sq" style="background:#EF9F27"></div>TWY</div>
+          <div class="leg"><div class="leg-sq" style="background:#378ADD"></div>Plataforma PEAs</div>
+          <div class="leg"><div class="leg-sq" style="background:#63991a"></div>SEI</div>
+          <div class="leg"><div class="leg-sq" style="background:#D4537E"></div>Combustible / Cerco perimetral</div>
+          <div class="leg"><div class="leg-sq" style="background:#888780"></div>Zona pública / no crítica</div>
+        </div>
+        <div id="no-zone-msg">⚠ Por favor selecciona la zona de trabajo en el plano antes de enviar la solicitud.</div>
+        <div id="zone-panel"></div>
+        <div id="horario-panel" style="display:none;margin-top:1rem">
+          <div class="checkbox-row" style="background:var(--warning-bg);border-color:var(--warning-border)">
+            <input type="checkbox" id="fuera-horario" onchange="onHorarioChange()"/>
+            <label for="fuera-horario">La actividad se realizará <strong>fuera del horario operativo de AQP (05:00 – 23:00)</strong></label>
+          </div>
+          <div id="horario-note" style="font-size:12px;color:var(--gray-600);margin-top:6px;font-style:italic"></div>
+        </div>
+      </div>
+      <div id="map-section-other" style="display:none">
+        <div class="map-instruction" style="background:var(--warning-bg);border-color:var(--warning-border)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          El plano interactivo está disponible actualmente solo para Arequipa (AQP). Para este aeropuerto, describe la zona de trabajo manualmente.
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-top:1.25rem">
+        <div class="field">
+          <label for="zona-texto">Zona seleccionada</label>
+          <input type="text" id="zona-texto" class="auto-filled" placeholder="Se completará al seleccionar en el plano"/>
+        </div>
+        <div class="field">
+          <label for="tipo-actividad">Tipo de actividad</label>
+          <input type="text" id="tipo-actividad" class="auto-filled" readonly placeholder="Se completará automáticamente"/>
+          <div class="tipo-auto-note" id="tipo-note" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="periodo-trabajo-card">
+      <div class="section-title">Ítem 1 — Atención y período de trabajo solicitado</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:1rem">Indica las fechas y horas solicitadas. El Supervisor de Lado Aire (SLA) de AAP validará y confirmará la fecha y hora final de ingreso según disponibilidad operacional.</p>
+      <div class="field-group">
+        <div class="field">
+          <label for="tipo-atencion">Tipo de atención <span class="req">*</span></label>
+          <select id="tipo-atencion">
+            <option value="">Selecciona</option>
+            <option value="Flujo normal (48h)">Flujo normal — 48 horas hábiles</option>
+            <option value="Urgente inmediato">Urgente inmediato — solo casos excepcionales</option>
+          </select>
+          <span class="error-msg" id="err-tipo-atencion">Selecciona el tipo de atención</span>
+          <div style="font-size:12px;color:var(--gray-600);margin-top:6px;line-height:1.5;background:var(--gray-50);border:0.5px solid var(--gray-200);border-radius:var(--radius);padding:0.5rem 0.75rem">
+            <strong>Flujo normal (48h):</strong> Solicitud estándar. El PVSO será revisado y validado en los tiempos habituales del proceso de facilidades — mínimo 48 horas hábiles antes del inicio de la actividad. Horario de recepción: lunes a viernes, 09:00–13:00.<br/>
+            <strong>Urgente inmediato:</strong> Solo para situaciones excepcionales que comprometan directamente la seguridad operacional o la continuidad de operaciones, y que requieran solución inmediata. El uso de esta opción sin justificación válida podrá derivar en su reprogramación al flujo normal por parte del SLA.
+          </div>
+        </div>
+        <div class="field"></div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="fecha-ingreso">Fecha y hora de ingreso solicitada <span class="req">*</span></label>
+          <input type="datetime-local" id="fecha-ingreso"/>
+          <span class="error-msg" id="err-fecha-ingreso">Selecciona fecha de ingreso</span>
+        </div>
+        <div class="field">
+          <label for="fecha-salida">Fecha y hora de salida solicitada <span class="req">*</span></label>
+          <input type="datetime-local" id="fecha-salida"/>
+          <span class="error-msg" id="err-fecha-salida">Selecciona fecha de salida</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="equipos-personal-card">
+      <div class="section-title">Objeto del proyecto / obra / actividad</div>
+      <div class="field-group full">
+        <div class="field">
+          <label for="objeto">Describe brevemente qué trabajo se va a realizar <span class="req">*</span></label>
+          <input type="text" id="objeto" placeholder="Ej. Mantenimiento de cerco perimetral tramo norte, bacheo menor en TWY Alfa, monitoreo ambiental..."/>
+          <span class="error-msg" id="err-objeto">Este campo es obligatorio</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="cronograma-card">
+      <div class="section-title">Ítem 5 — Cronograma de actividades</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:1rem">Debe ser coherente con las fechas y horas solicitadas en el Ítem 1. Indica los días y horas exactas de trabajo durante toda la permanencia.</p>
+      <div class="field-group full">
+        <div class="field">
+          <label for="cronograma">Describe los días y horas de trabajo (ej. Lunes a viernes, 06:00 a 10:00, semanas 1 y 2)</label>
+          <textarea id="cronograma" placeholder="Ej. Semana 1: lunes a viernes, 06:00–10:00. Semana 2: lunes, miércoles y viernes, 07:00–09:00..."></textarea>
+        </div>
+      </div>
+      <div class="field-group full" style="margin-top:0">
+        <div class="field">
+          <label>Adjuntar cronograma detallado (PDF, Excel, imagen de diagrama Gantt) — opcional pero recomendado</label>
+          <div class="file-upload" onclick="document.getElementById('archivo-cronograma').click()">
+            <input type="file" id="archivo-cronograma" accept=".pdf,.xlsx,.xls,.png,.jpg,.jpeg" onchange="showFileNameMulti(this,'fn-cronograma')"/>
+            <label class="file-upload-label" for="archivo-cronograma">
+              <strong>Haz clic para adjuntar</strong> cronograma<br/>
+              <span style="font-size:12px;color:var(--gray-400)">PDF, Excel o imagen</span>
+            </label>
+            <div id="fn-cronograma"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="cercamiento-card">
+      <div class="section-title">Ítem 6 — Ubicación exacta y área de cercamiento</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:0.75rem">La zona general ya fue identificada en el plano de arriba. Aquí debes indicar la ubicación específica dentro de esa zona y, si aplica, el área de cercamiento para maquinaria, almacenes u otros. Adjunta un plano, croquis o imagen que muestre exactamente dónde estará tu área de trabajo.</p>
+      <div class="field-group full">
+        <div class="field">
+          <label for="area-cercamiento">Descripción del área de cercamiento (si aplica)</label>
+          <textarea id="area-cercamiento" placeholder="Si no aplica, escribe 'No aplica'. Si aplica, describe ubicación y dimensiones del área cercada. Coordinar con el área solicitante de AAP."></textarea>
+        </div>
+      </div>
+      <div class="field-group full" style="margin-top:0">
+        <div class="field">
+          <label>Adjuntar plano o croquis de ubicación del área de trabajo / cercamiento — opcional pero recomendado</label>
+          <div class="file-upload" onclick="document.getElementById('archivo-cercamiento').click()">
+            <input type="file" id="archivo-cercamiento" accept=".pdf,.png,.jpg,.jpeg" onchange="showFileNameMulti(this,'fn-cercamiento')"/>
+            <label class="file-upload-label" for="archivo-cercamiento">
+              <strong>Haz clic para adjuntar</strong> plano o croquis<br/>
+              <span style="font-size:12px;color:var(--gray-400)">PDF o imagen</span>
+            </label>
+            <div id="fn-cercamiento"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="senalizacion-card">
+      <div class="section-title">Ítem 7 — Señalización del área a intervenir</div>
+      <div class="field-group full">
+        <div class="field">
+          <label for="senalizacion">Describe el sistema de señalización diurno y/o nocturno: conos (mín. 0.5m, color rojo/naranja/amarillo), banderas (mín. 0.5m × 0.5m), tableros de área fuera de servicio (mín. 0.5m × 0.9m, fajas verticales rojo-blanco), luces nocturnas — indica distancias al área de maniobras <span class="req">*</span></label>
+          <textarea id="senalizacion" placeholder="Ej. Conos naranjas cada 5m, banderas amarillas en los 4 extremos a 3m del borde de TWY, tablero de área fuera de servicio en el acceso principal..."></textarea>
+          <span class="error-msg" id="err-senalizacion">Este campo es obligatorio</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="equipos-card">
+      <div class="section-title">Ítem 8 — Descripción de equipos y maquinaria</div>
+      <div class="warning-box" style="background:var(--warning-bg);border:0.5px solid var(--warning-border);border-radius:var(--radius);padding:0.75rem 1rem;margin-bottom:1rem;font-size:13px;color:var(--warning)">
+        <strong>⚠ Restricción AQP — PLBs:</strong> La altura máxima permitida para equipos y maquinaria que transiten por la vía vehicular frente a plataforma (zona de PLBs) es de <strong>3.50 metros</strong>. Equipos o maquinaria que superen esta altura no podrán circular por esa zona. Coordinar ruta alternativa con el área solicitante de AAP antes de iniciar.
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="equipos-menores">Equipos menores / herramientas (si aplica)</label>
+          <input type="text" id="equipos-menores" placeholder="Ej. Taladro, compresora portátil, andamios"/>
+        </div>
+        <div class="field">
+          <label for="equipos-mayores">Equipos mayores / maquinaria pesada (si aplica)</label>
+          <input type="text" id="equipos-mayores" placeholder="Ej. Retroexcavadora, camión grúa, cisterna"/>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="equipo-altura">Altura máxima del equipo mayor (metros)</label>
+          <input type="text" id="equipo-altura" placeholder="Máx. 3.50 m en vía frente a plataforma AQP"/>
+        </div>
+        <div class="field">
+          <label for="equipo-anchura">Anchura máxima del equipo mayor (metros)</label>
+          <input type="text" id="equipo-anchura" placeholder="Máx. 3.50 m"/>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--gray-600);margin-top:0.75rem;background:var(--aap-blue-light);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:0.75rem 1rem;line-height:1.6">
+        <strong>Documentos requeridos según el proceso de facilidades AAP:</strong><br/>
+        • <strong>Carta G (Facilidades Vehiculares):</strong> Si ingresan vehículos o maquinaria pesada al lado aire (pista, calles de rodaje, plataforma o cerco perimetral). Firmada por el representante legal con V°B° del área solicitante de AAP.<br/>
+        • <strong>Carta I (Facilidades de equipos / herramientas / insumos):</strong> Si ingresan equipos, herramientas o insumos a zonas de seguridad restringida. Firmada por el representante legal con V°B° del área solicitante de AAP.
+      </div>
+      <div class="field-group" style="margin-top:0.75rem">
+        <div class="field">
+          <label>Adjuntar Carta G — Facilidades Vehiculares (si aplica)</label>
+          <div class="file-upload" onclick="document.getElementById('archivo-carta-g').click()">
+            <input type="file" id="archivo-carta-g" accept=".pdf" onchange="showFileNameMulti(this,'fn-carta-g')"/>
+            <label class="file-upload-label" for="archivo-carta-g">
+              <strong>Haz clic para adjuntar</strong> Carta G<br/>
+              <span style="font-size:12px;color:var(--gray-400)">Solo PDF</span>
+            </label>
+            <div id="fn-carta-g"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Adjuntar Carta I — Facilidades de equipos / insumos (si aplica)</label>
+          <div class="file-upload" onclick="document.getElementById('archivo-carta-i').click()">
+            <input type="file" id="archivo-carta-i" accept=".pdf" onchange="showFileNameMulti(this,'fn-carta-i')"/>
+            <label class="file-upload-label" for="archivo-carta-i">
+              <strong>Haz clic para adjuntar</strong> Carta I<br/>
+              <span style="font-size:12px;color:var(--gray-400)">Solo PDF</span>
+            </label>
+            <div id="fn-carta-i"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="rutas-card">
+      <div class="section-title">Ítem 9 — Rutas establecidas</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:1rem">Describe y traza la ruta de acceso, circulación y salida para personas y vehículos. Si la ruta cruza una zona crítica (TWY, RWY o plataforma), el sistema lo detectará automáticamente al trazarla en el mapa.</p>
+      <div class="field-group full">
+        <div class="field">
+          <label for="rutas">Descripción de rutas: indica entrada, circulación interna y salida, cantidad de personas y vehículos <span class="req">*</span></label>
+          <textarea id="rutas" placeholder="Ej. Entrada por portón norte, recorrido por vía perimetral este hasta el punto de cercamiento, 2 vehículos (camioneta + camión), 5 personas..."></textarea>
+          <span class="error-msg" id="err-rutas">Este campo es obligatorio</span>
+        </div>
+      </div>
+
+      <div id="rutas-map-section" style="margin-top:1rem">
+        <label style="font-size:13px;font-weight:500;color:var(--gray-600);display:block;margin-bottom:6px">Traza tu ruta en el plano</label>
+        <div style="font-size:12px;color:var(--gray-600);margin-bottom:8px;background:var(--aap-blue-light);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:0.5rem 0.75rem;line-height:1.6">
+          👉 <strong>Cómo hacerlo:</strong> Haz clic sobre el mapa en cada punto por donde pasará tu ruta (entrada → recorrido → destino → salida). Cada clic añade un punto. El sistema detectará automáticamente si tu ruta cruza zonas críticas (TWY, RWY, Plataforma) y te lo indicará. Usa el botón "Deshacer punto" si te equivocas.
+        </div>
+        <div id="map-rutas" style="width:100%;height:350px;border-radius:var(--radius);border:0.5px solid var(--gray-200)"></div>
+        <div id="ruta-alerta" style="display:none;margin-top:0.5rem;font-size:13px;padding:0.65rem 1rem;border-radius:var(--radius)"></div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <button type="button" onclick="undoRutaPoint()" style="font-size:12px;font-family:var(--font-sans);padding:5px 12px;border:0.5px solid var(--gray-200);border-radius:var(--radius);background:var(--gray-50);color:var(--gray-600);cursor:pointer">↩ Deshacer punto</button>
+          <button type="button" onclick="clearRuta()" style="font-size:12px;font-family:var(--font-sans);padding:5px 12px;border:0.5px solid var(--danger-border);border-radius:var(--radius);background:var(--danger-bg);color:var(--danger);cursor:pointer">🗑 Limpiar ruta</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="contactos-card">
+      <div class="section-title">Ítem 10 — Previsión de información y responsables</div>
+      <p style="font-size:13px;color:var(--gray-600);margin-bottom:1rem">Indica los responsables de seguridad operacional de ambas partes. El RESO-AAP debe ser personal de la sede que ya ha sido coordinado con el área solicitante.</p>
+
+      <div style="font-size:13px;font-weight:600;color:var(--aap-blue-mid);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.04em">Contacto de emergencia del tercero</div>
+      <div class="field-group">
+        <div class="field">
+          <label for="emergencia-nombre">Nombres y apellidos <span class="req">*</span></label>
+          <input type="text" id="emergencia-nombre" placeholder="Nombre completo"/>
+          <span class="error-msg" id="err-emergencia-nombre">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="emergencia-celular">N° celular <span class="req">*</span></label>
+          <input type="text" id="emergencia-celular" placeholder="9XXXXXXXX"/>
+          <span class="error-msg" id="err-emergencia-celular">Este campo es obligatorio</span>
+        </div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--aap-blue-mid);margin-top:1.25rem;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.04em">RESO del tercero (Responsable de Seguridad Operacional en campo)</div>
+      <div class="field-group">
+        <div class="field">
+          <label for="responsable-tercero">Nombres y apellidos <span class="req">*</span></label>
+          <input type="text" id="responsable-tercero" placeholder="Nombre completo del RESO del contratista"/>
+          <span class="error-msg" id="err-responsable-tercero">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="responsable-tercero-celular">N° celular <span class="req">*</span></label>
+          <input type="text" id="responsable-tercero-celular" placeholder="9XXXXXXXX"/>
+          <span class="error-msg" id="err-responsable-tercero-celular">Este campo es obligatorio</span>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:0">
+        <div class="field">
+          <label for="responsable-tercero-correo">Correo electrónico del RESO tercero <span class="req">*</span></label>
+          <input type="email" id="responsable-tercero-correo" placeholder="reso@empresa.com"/>
+          <span class="error-msg" id="err-responsable-tercero-correo">Ingresa un correo válido</span>
+        </div>
+        <div class="field"></div>
+      </div>
+
+      <div style="font-size:13px;font-weight:600;color:var(--aap-blue-mid);margin-top:1.25rem;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.04em">RESO-AAP (Responsable de Seguridad Operacional — Aeropuertos Andinos)</div>
+      <div class="map-instruction" style="margin-bottom:1rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Esta persona debe ser personal de AAP asignado a la sede del aeropuerto donde se realizará la actividad, con conocimiento situacional del aeródromo. No puede ser personal sin conocimiento de las instalaciones y zonas críticas de la sede. Debe haber sido coordinado previamente con el área solicitante.
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="reso-aap-nombre">Nombres y apellidos del RESO-AAP <span class="req">*</span></label>
+          <input type="text" id="reso-aap-nombre" placeholder="Nombre completo del RESO de AAP"/>
+          <span class="error-msg" id="err-reso-aap-nombre">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="reso-aap-area">Área de AAP a la que pertenece <span class="req">*</span></label>
+          <select id="reso-aap-area">
+            <option value="">Selecciona un área</option>
+            <option value="Operaciones">Operaciones</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Seguridad Operacional (SMS)">Seguridad Operacional (SMS)</option>
+            <option value="Seguridad de la Aviación (AVSEC)">Seguridad de la Aviación (AVSEC)</option>
+            <option value="Medio Ambiente / SSOMA">Medio Ambiente / SSOMA</option>
+            <option value="Comercial">Comercial</option>
+            <option value="Otro">Otro</option>
+          </select>
+          <span class="error-msg" id="err-reso-aap-area">Selecciona el área</span>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:0">
+        <div class="field">
+          <label for="reso-aap-celular">N° celular del RESO-AAP <span class="req">*</span></label>
+          <input type="text" id="reso-aap-celular" placeholder="9XXXXXXXX"/>
+          <span class="error-msg" id="err-reso-aap-celular">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="reso-aap-correo">Correo electrónico del RESO-AAP <span class="req">*</span></label>
+          <input type="email" id="reso-aap-correo" placeholder="nombre@aeropuertosandinos.com"/>
+          <span class="error-msg" id="err-reso-aap-correo">Ingresa un correo válido</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="num-personal-card">
+      <div class="section-title">Número de personal que ingresa</div>
+      <div class="field-group">
+        <div class="field">
+          <label for="num-personal">Número total de personas que ingresarán al lado aire <span class="req">*</span></label>
+          <input type="number" id="num-personal" min="1" placeholder="Ej. 4"/>
+          <span class="error-msg" id="err-num-personal">Ingresa el número de personal</span>
+        </div>
+        <div class="field"></div>
+      </div>
+      <div style="font-size:13px;color:var(--gray-600);margin-top:0.75rem;background:var(--aap-blue-light);border:0.5px solid #B5D4F4;border-radius:var(--radius);padding:0.75rem 1rem;line-height:1.6">
+        <strong>Documento requerido — Carta de Facilidades Personales (Carta C):</strong> Según el proceso de facilidades AAP, el ingreso de personas al lado aire requiere una Carta de Facilidades Personales (Carta C) firmada por el representante legal y con V°B° del área solicitante de AAP. Este documento debe incluir el listado nominal de todo el personal que ingresará. Adjúntalo a continuación.
+      </div>
+      <div class="field-group full" style="margin-top:0.75rem">
+        <div class="field">
+          <label>Adjuntar Carta de Facilidades Personales (Carta C) — PDF</label>
+          <div class="file-upload" onclick="document.getElementById('archivo-carta-c').click()">
+            <input type="file" id="archivo-carta-c" accept=".pdf" onchange="showFileNameMulti(this,'fn-carta-c')"/>
+            <label class="file-upload-label" for="archivo-carta-c">
+              <strong>Haz clic para adjuntar</strong> Carta C<br/>
+              <span style="font-size:12px;color:var(--gray-400)">Solo PDF</span>
+            </label>
+            <div id="fn-carta-c"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card" id="carta-compromiso-card">
+      <div class="section-title">Carta de compromiso — Normativa de Seguridad Operacional Lado Aire</div>
+      <div class="carta-box">
+        <h4>SMS-AAP-PA-001(a) — Carta de Compromiso de Lectura</h4>
+        <h4 style="margin-top:8px">"Normativa de Seguridad Operacional Lado Aire" — Aeropuertos Andinos del Perú</h4>
+        <br/>
+        <p>Mediante la presente, el suscrito Representante Legal de la empresa contratista/tercera declara de forma expresa y bajo su responsabilidad que:</p>
+        <br/>
+        <p><strong>1.</strong> Ha recibido, leído y comprendido íntegramente la <em>Normativa de Seguridad Operacional Lado Aire</em> de Aeropuertos Andinos del Perú.</p>
+        <p><strong>2.</strong> Ha difundido y dado lectura de dicha normativa al <strong>100% del personal</strong> que ingresará al lado aire del aeropuerto en el marco de la actividad declarada en esta solicitud, sin excepción.</p>
+        <p><strong>3.</strong> Se compromete a cumplir y hacer cumplir a todos sus colaboradores, subcontratistas y personal a su cargo las disposiciones establecidas en la normativa, asumiendo plena responsabilidad por cualquier transgresión o inobservancia.</p>
+        <p><strong>4.</strong> Reconoce que el incumplimiento de estas normas podrá derivar en la suspensión inmediata de actividades, retiro del personal del área de movimiento, y las sanciones administrativas que Aeropuertos Andinos del Perú considere pertinentes, sin perjuicio de las responsabilidades civiles o penales que correspondan.</p>
+        <br/>
+        <p>Esta declaración tiene carácter de Declaración Jurada y produce plenos efectos legales desde el momento de su firma digital.</p>
+      </div>
+      <div style="margin-bottom:1rem;padding:0.85rem 1rem;background:var(--danger-bg);border:0.5px solid var(--danger-border);border-radius:var(--radius);font-size:13px;line-height:1.6">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" style="vertical-align:-3px;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <strong>Paso obligatorio antes de firmar:</strong><br/>
+        1. Descarga y lee íntegramente las Normas de Seguridad Operacional Lado Aire:<br/>
+        &nbsp;&nbsp;&nbsp;<a href="https://drive.google.com/file/d/19_8l-7WIu8QPptEVjnCla--K9bQVV0ka/view?usp=drive_link" target="_blank" style="color:var(--aap-blue-mid);font-weight:600">📄 Descargar Normas de Seguridad Operacional Lado Aire (PDF) →</a><br/>
+        2. Comparte este documento con <strong>todo el personal</strong> que ingresará al aeropuerto — sin excepción.<br/>
+        3. Solo firma si puedes declarar bajo juramento que todos lo han leído y comprendido.
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="rep-legal">Nombres y apellidos del representante legal <span class="req">*</span></label>
+          <input type="text" id="rep-legal" placeholder="Nombre completo del representante legal"/>
+          <span class="error-msg" id="err-rep-legal">Este campo es obligatorio</span>
+        </div>
+        <div class="field">
+          <label for="rep-dni">N° DNI del representante legal <span class="req">*</span></label>
+          <input type="text" id="rep-dni" placeholder="DNI" maxlength="8"/>
+          <span class="error-msg" id="err-rep-dni">Ingresa un DNI válido (8 dígitos)</span>
+        </div>
+      </div>
+      <div class="field-group full">
+        <div class="field">
+          <label>Firma digital del representante legal <span class="req">*</span></label>
+          <div class="firma-box">
+            <canvas id="firma-canvas"></canvas>
+            <div class="firma-actions">
+              <span>Firma con el mouse o el dedo dentro del recuadro</span>
+              <button type="button" class="btn-clear-firma" onclick="clearFirma()">Limpiar firma</button>
+            </div>
+          </div>
+          <span class="error-msg" id="err-firma">Debes firmar para continuar</span>
+        </div>
+      </div>
+      <div class="checkbox-row" style="margin-top:1rem">
+        <input type="checkbox" id="acepta-carta"/>
+        <label for="acepta-carta">
+          <strong>Declaro bajo juramento</strong> haber leído íntegramente la Normativa de Seguridad Operacional Lado Aire de Aeropuertos Andinos del Perú, haberla difundido al 100% del personal a mi cargo que ingresará al aeropuerto, y me comprometo a cumplirla y hacerla cumplir en todo momento. Reconozco que esta declaración tiene carácter de Declaración Jurada y asume plena responsabilidad legal.
+        </label>
+      </div>
+      <span class="error-msg" id="err-acepta-carta">Debes aceptar la carta de compromiso para continuar</span>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-submit" onclick="submitForm()">Enviar solicitud PVSO</button>
+      <p class="submit-note">Las solicitudes enviadas fuera del horario de recepción (lunes a viernes, 09:00–13:00) serán procesadas el siguiente día laborable. El Supervisor de Lado Aire revisará tu PVSO ítem por ítem y, de existir observaciones, te las hará llegar al correo registrado para que puedas levantarlas.</p>
+    </div>
+
+  </div>
+
+  <div id="success-screen">
+    <div class="check">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Solicitud enviada correctamente</h2>
+    <p>Tu solicitud PVSO ha sido registrada. El Supervisor de Lado Aire (SLA) de AAP la revisará y te contactará al correo indicado con la validación final, fecha y hora confirmadas, o con las observaciones a subsanar.</p>
+    <div class="ref">Número de referencia: <strong id="ref-num"></strong></div>
+    <br/>
+    <button class="btn-new" onclick="resetForm()">Enviar otra solicitud</button>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const ZONES = [{"id": "sei", "name": "SEI", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "INFRAESTRUCTURA CRÍTICA", "tipoNote": "Base SEI — actividad menor según procedimiento interno. Requiere PVSO tipo AME con coordinación del Jefe SEI.", "cls": "crit-menor", "color": "#63991a", "coords": [[-16.341752, -71.573134], [-16.341965, -71.57309], [-16.342127, -71.572998], [-16.342284, -71.572882], [-16.342706, -71.572528], [-16.342148, -71.571756], [-16.341807, -71.572023], [-16.341786, -71.572362], [-16.341777, -71.57259], [-16.341767, -71.572772], [-16.341752, -71.573134]], "recs": ["Ninguna actividad puede reducir la capacidad operativa del SEI ni obstruir sus vías de acceso.", "Notificar al Jefe SEI con anticipación cualquier trabajo en las inmediaciones.", "Prohibido fumar o generar llamas abiertas dentro del área.", "Cumplimiento obligatorio con RAP 139 respecto a cobertura de protección contra incendios."], "isHardZone": false}, {"id": "zona-pública---no-critica---acceso-terminal-norte", "name": "Zona pública / no crítica — Acceso terminal Norte", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA PÚBLICA / NO CRÍTICA", "tipoNote": "Zona pública sin restricción operacional directa.", "cls": "min", "color": "#888780", "coords": [[-16.344362, -71.569006], [-16.344467, -71.569008], [-16.344477, -71.568786], [-16.344584, -71.568774], [-16.344609, -71.568681], [-16.344727, -71.568681], [-16.344848, -71.568839], [-16.34502, -71.568625], [-16.345589, -71.568635], [-16.345764, -71.568491], [-16.345813, -71.568356], [-16.345957, -71.565559], [-16.345937, -71.565457], [-16.345852, -71.565315], [-16.345854, -71.565242], [-16.345914, -71.565191], [-16.346706, -71.564714], [-16.346529, -71.564435], [-16.345715, -71.564982], [-16.345633, -71.564969], [-16.345445, -71.564722], [-16.344804, -71.565186], [-16.344701, -71.566991], [-16.344598, -71.566989], [-16.344598, -71.567262], [-16.344691, -71.5673], [-16.344673, -71.567767], [-16.344766, -71.567764], [-16.344753, -71.568196], [-16.34441, -71.568182], [-16.344362, -71.569006]], "recs": ["Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho.", "Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro del aeropuerto.", "Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas en las instalaciones.", "No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en zona incorrecta, notifícalo al personal de AAP.", "Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.", "Reporta cualquier objeto sospechoso, daño en instalaciones o situación anormal al personal de AAP de inmediato.", "El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado."], "isHardZone": false}, {"id": "zona-no-critica---parking", "name": "Zona no crítica — Parking", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA PÚBLICA / NO CRÍTICA", "tipoNote": "Área de estacionamiento público, sin restricción operacional directa.", "cls": "min", "color": "#888780", "coords": [[-16.345903, -71.566774], [-16.345816, -71.568388], [-16.345744, -71.568512], [-16.34679, -71.567722], [-16.345991, -71.566784], [-16.345903, -71.566774]], "recs": ["Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho.", "Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro del aeropuerto.", "Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas en las instalaciones.", "No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en zona incorrecta, notifícalo al personal de AAP.", "Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.", "Reporta cualquier objeto sospechoso, daño en instalaciones o situación anormal al personal de AAP de inmediato.", "El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado."], "isHardZone": false}, {"id": "zona-no-critica---acceso-vial", "name": "Zona no crítica — Acceso vial", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA PÚBLICA / NO CRÍTICA", "tipoNote": "Vía de acceso vehicular pública, sin restricción operacional directa.", "cls": "min", "color": "#888780", "coords": [[-16.345566, -71.568635], [-16.345285, -71.568633], [-16.34502, -71.568625], [-16.344848, -71.568839], [-16.34474, -71.5687], [-16.344609, -71.568681], [-16.344588, -71.568794], [-16.344477, -71.568786], [-16.344467, -71.569008], [-16.344367, -71.569014], [-16.344292, -71.569], [-16.344217, -71.568995], [-16.344041, -71.568982], [-16.344034, -71.569027], [-16.343618, -71.56901], [-16.343435, -71.569118], [-16.342892, -71.570006], [-16.342343, -71.571039], [-16.345566, -71.568635]], "recs": ["Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho.", "Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro del aeropuerto.", "Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas en las instalaciones.", "No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en zona incorrecta, notifícalo al personal de AAP.", "Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.", "Reporta cualquier objeto sospechoso, daño en instalaciones o situación anormal al personal de AAP de inmediato.", "El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado."], "isHardZone": false}, {"id": "zona-no-critica---perimetro-vial-interno", "name": "Zona no crítica — Perímetro vial interno", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA PÚBLICA / NO CRÍTICA", "tipoNote": "Vía interna de circulación, sin restricción operacional directa.", "cls": "min", "color": "#888780", "coords": [[-16.344037, -71.568982], [-16.344213, -71.568995], [-16.344252, -71.568118], [-16.34423, -71.568118], [-16.344259, -71.567608], [-16.344411, -71.567617], [-16.344422, -71.567529], [-16.344366, -71.567522], [-16.344378, -71.567376], [-16.344509, -71.56738], [-16.34451, -71.567356], [-16.344682, -71.567367], [-16.344687, -71.5673], [-16.344594, -71.567262], [-16.344594, -71.566989], [-16.344697, -71.566991], [-16.344767, -71.56589], [-16.344272, -71.565849], [-16.344285, -71.565602], [-16.344777, -71.565627], [-16.3448, -71.565186], [-16.344233, -71.565071], [-16.344037, -71.568982]], "recs": ["Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho.", "Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro del aeropuerto.", "Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas en las instalaciones.", "No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en zona incorrecta, notifícalo al personal de AAP.", "Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.", "Reporta cualquier objeto sospechoso, daño en instalaciones o situación anormal al personal de AAP de inmediato.", "El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado."], "isHardZone": false}, {"id": "deposito-combustible-herco", "name": "Depósito combustible (HERCO)", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA DE RIESGO DE INCENDIO — ZONA CRÍTICA", "tipoNote": "El depósito de combustible es zona crítica por el riesgo de incendio/explosión, aunque la actividad en sí es de tipo AME (actividad menor) según procedimiento HERCO.", "cls": "crit-menor", "color": "#D4537E", "coords": [[-16.344272, -71.565849], [-16.344767, -71.56589], [-16.344777, -71.565627], [-16.344285, -71.565602], [-16.344272, -71.565849]], "recs": ["Esta zona es crítica por el riesgo de incendio/explosión asociado al combustible, aunque la actividad es de tipo AME.", "Prohibido fumar, generar llamas abiertas o chispas en las inmediaciones del depósito.", "El personal debe contar con capacitación en manejo de derrames y uso de extintores.", "Coordinar con HERCO y Operaciones AAP cualquier actividad cercana al depósito.", "En caso de derrame, activar inmediatamente el procedimiento de emergencia ambiental."], "isHardZone": false}, {"id": "terminal---acceso-público-landside", "name": "Terminal — acceso público (landside)", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "ZONA PÚBLICA / NO CRÍTICA", "tipoNote": "Edificio terminal y acceso público, sin restricción operacional directa.", "cls": "min", "color": "#888780", "coords": [[-16.344217, -71.568995], [-16.344367, -71.569014], [-16.34441, -71.568182], [-16.344753, -71.568196], [-16.344765, -71.567774], [-16.344673, -71.567767], [-16.34469, -71.567372], [-16.34451, -71.567356], [-16.344509, -71.56738], [-16.344378, -71.567376], [-16.344366, -71.567522], [-16.344422, -71.567529], [-16.344411, -71.567617], [-16.344259, -71.567608], [-16.34423, -71.568118], [-16.344252, -71.568118], [-16.344217, -71.568995]], "recs": ["Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho.", "Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro del aeropuerto.", "Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas en las instalaciones.", "No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en zona incorrecta, notifícalo al personal de AAP.", "Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.", "Reporta cualquier objeto sospechoso, daño en instalaciones o situación anormal al personal de AAP de inmediato.", "El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado."], "isHardZone": false}, {"id": "plataforma-peas", "name": "Plataforma PEAs", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE RAMPA", "tipoNote": "La plataforma es área de rampa con presencia activa de aeronaves. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#378ADD", "coords": [[-16.344233, -71.565071], [-16.34375, -71.565045], [-16.343636, -71.567282], [-16.343541, -71.569005], [-16.344034, -71.569027], [-16.344233, -71.565071]], "recs": ["Coordinar con Supervisor de Rampa y Operaciones AAP antes de iniciar cualquier actividad.", "Zona de seguridad de 3m alrededor de aeronaves con motores encendidos o en remolque.", "EPP completo obligatorio: chaleco, calzado de seguridad, tapones auditivos.", "FOD walk obligatorio antes y después de cada turno.", "Cualquier daño a aeronave o equipo debe reportarse como evento SMS obligatorio."], "isHardZone": true}, {"id": "calle-de-rodaje-de-plataforma", "name": "Calle de rodaje de plataforma", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO", "tipoNote": "Calle de rodaje crítica. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#EF9F27", "coords": [[-16.343551, -71.568803], [-16.34375, -71.565045], [-16.343246, -71.565018], [-16.343088, -71.568622], [-16.343354, -71.568727], [-16.343551, -71.568803]], "recs": ["Requiere autorización explícita de TWR para cualquier ingreso vehicular o trabajo en superficie.", "Personal debe contar con habilitación de área de movimiento vigente.", "Portar radio VHF activo y chaleco reflectivo en todo momento.", "Inspeccionar FOD al finalizar y documentar en formato correspondiente."], "isHardZone": true}, {"id": "calle-de-rodaje-bravo", "name": "Calle de rodaje Bravo", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO", "tipoNote": "Calle de rodaje crítica. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#EF9F27", "coords": [[-16.343246, -71.565018], [-16.343971, -71.565052], [-16.344193, -71.560889], [-16.344117, -71.56066], [-16.344097, -71.560595], [-16.344015, -71.560433], [-16.342641, -71.558384], [-16.342285, -71.557617], [-16.342069, -71.557302], [-16.341838, -71.556936], [-16.341828, -71.557052], [-16.341826, -71.557291], [-16.341807, -71.557647], [-16.341793, -71.558023], [-16.342024, -71.558385], [-16.342195, -71.558698], [-16.342482, -71.559292], [-16.342816, -71.559865], [-16.343354, -71.560653], [-16.343439, -71.561005], [-16.34344, -71.561784], [-16.343246, -71.565018]], "recs": ["Requiere autorización TWR para cualquier ingreso. Zona de maniobra de aeronaves.", "Vehículos de rampa deben respetar señalización horizontal y límite de velocidad (15 km/h).", "Reportar condiciones inseguras al sistema SMS (RPI o AppSheet)."], "isHardZone": true}, {"id": "calle-de-rodaje-bravo-01", "name": "Calle de rodaje Bravo 01", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO", "tipoNote": "Calle de rodaje crítica. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#EF9F27", "coords": [[-16.343088, -71.568622], [-16.341873, -71.570761], [-16.341852, -71.571219], [-16.341839, -71.571422], [-16.342343, -71.571039], [-16.343027, -71.56978], [-16.343435, -71.569118], [-16.343618, -71.56901], [-16.343541, -71.569005], [-16.343551, -71.568803], [-16.343088, -71.568622]], "recs": ["Requiere autorización TWR para cualquier ingreso. Zona de maniobra de aeronaves.", "Vehículos de rampa deben respetar señalización horizontal y límite de velocidad (15 km/h).", "Reportar condiciones inseguras al sistema SMS (RPI o AppSheet)."], "isHardZone": true}, {"id": "calle-de-rodaje-militar", "name": "Calle de rodaje militar", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO", "tipoNote": "Calle de rodaje militar — área de movimiento crítica. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#EF9F27", "coords": [[-16.34117, -71.572517], [-16.346995, -71.567959], [-16.34679, -71.567722], [-16.341204, -71.5719], [-16.341187, -71.572237], [-16.34117, -71.572517]], "recs": ["Requiere coordinación con TWR y autoridades militares según corresponda.", "Personal debe contar con habilitación de área de movimiento vigente.", "Portar radio VHF activo y chaleco reflectivo en todo momento."], "isHardZone": true}, {"id": "pista-de-aterrizaje-10-28-rwy", "name": "Pista de aterrizaje 10-28 (RWY)", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO CRÍTICA", "tipoNote": "La pista de aterrizaje es zona crítica máxima. Requiere PVSO tipo AMA con mínimo 15 días de anticipación.", "cls": "crit", "color": "#E24B4A", "coords": [[-16.339223, -71.585382], [-16.340623, -71.585406], [-16.341862, -71.55631], [-16.340684, -71.556069], [-16.339223, -71.585382]], "recs": ["Toda intervención requiere coordinación con TWR AQP y emisión de NOTAM previo al inicio.", "Obligatorio Permiso de Trabajo en Pista (PTP) firmado por Operaciones y Seguridad Operacional.", "Personal debe portar chaleco reflectivo, radio VHF activo y habilitación vigente.", "Protocolo FOD antes y después de la actividad. Registrar en formato GRF02-AAP.", "Coordinar con SEI posicionamiento del vehículo de emergencia durante toda la intervención."], "isHardZone": true}, {"id": "calle-de-rodaje-alfa", "name": "Calle de rodaje Alfa", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "ÁREA DE MOVIMIENTO", "tipoNote": "Calle de rodaje crítica. Requiere PVSO tipo AMA.", "cls": "crit", "color": "#EF9F27", "coords": [[-16.340926, -71.577989], [-16.341523, -71.577377], [-16.342482, -71.559292], [-16.342161, -71.558628], [-16.341793, -71.558023], [-16.340926, -71.577989]], "recs": ["Requiere autorización explícita de TWR para cualquier ingreso vehicular o trabajo en superficie.", "Personal debe contar con habilitación de área de movimiento vigente.", "Portar radio VHF activo y chaleco reflectivo en todo momento.", "Inspeccionar FOD al finalizar y documentar en formato correspondiente."], "isHardZone": true}, {"id": "zona-de-escudos---franjas-de-seguridad", "name": "Zona de escudos / franjas de seguridad", "tipo": "AMA", "tipoLabel": "AMA — Actividad Mayor", "type": "FRANJA DE SEGURIDAD DE PISTA", "tipoNote": "Franja lateral de seguridad de pista. Requiere PVSO tipo AMA por proximidad al área de movimiento.", "cls": "crit", "color": "#E24B4A", "coords": [[-16.341879, -71.570742], [-16.343088, -71.568622], [-16.343246, -71.565018], [-16.343346, -71.563434], [-16.343399, -71.562642], [-16.343441, -71.56185], [-16.343439, -71.561005], [-16.343354, -71.560653], [-16.342903, -71.559997], [-16.342692, -71.55965], [-16.342482, -71.559292], [-16.341879, -71.570742]], "recs": ["Verificar que ninguna actividad ni maquinaria invada la superficie libre de obstáculos (OFZ).", "Coordinar con TWR si la actividad requiere aproximarse a la franja de pista.", "Personal debe contar con habilitación de área de movimiento vigente.", "Cualquier objeto u obstáculo temporal debe retirarse antes de operaciones aéreas."], "isHardZone": false}, {"id": "cerco-perimetral", "name": "Cerco perimetral", "tipo": "AME", "tipoLabel": "AME — Actividad Menor", "type": "PERÍMETRO DE SEGURIDAD — ZONA CRÍTICA", "tipoNote": "El cerco perimetral es zona crítica por el riesgo de cruce de TWY o RWY al desplazarse hacia él, aunque la actividad en sí es de tipo AME (actividad menor).", "cls": "crit-menor", "color": "#D4537E", "coords": [[-16.346995, -71.567959], [-16.342148, -71.571756], [-16.342706, -71.572528], [-16.342516, -71.572691], [-16.342135, -71.572995], [-16.341965, -71.57309], [-16.341752, -71.573134], [-16.341523, -71.577377], [-16.340941, -71.577979], [-16.340623, -71.585406], [-16.339223, -71.585382], [-16.340684, -71.556069], [-16.341862, -71.55631], [-16.341838, -71.556936], [-16.342308, -71.557653], [-16.342641, -71.558384], [-16.34401, -71.560418], [-16.344097, -71.560595], [-16.344193, -71.560889], [-16.344121, -71.562289], [-16.343971, -71.565052], [-16.344233, -71.565071], [-16.344804, -71.565186], [-16.344967, -71.565068], [-16.34466, -71.564592], [-16.345147, -71.564251], [-16.345445, -71.564722], [-16.345633, -71.564969], [-16.345715, -71.564982], [-16.346529, -71.564435], [-16.346811, -71.564238], [-16.347037, -71.564109], [-16.347228, -71.564039], [-16.347479, -71.563971], [-16.347796, -71.563953], [-16.348024, -71.563971], [-16.348258, -71.56403], [-16.348441, -71.56411], [-16.348674, -71.564256], [-16.343461, -71.557975], [-16.343629, -71.557819], [-16.343404, -71.557544], [-16.343055, -71.556508], [-16.34244, -71.556375], [-16.341271, -71.555976], [-16.340588, -71.555729], [-16.340187, -71.555716], [-16.339484, -71.556172], [-16.338442, -71.555805], [-16.3369, -71.555746], [-16.335835, -71.556483], [-16.332964, -71.561263], [-16.3328, -71.56163], [-16.33272, -71.561955], [-16.332625, -71.564715], [-16.332504, -71.568532], [-16.33254, -71.569575], [-16.333356, -71.577265], [-16.338251, -71.581927], [-16.338164, -71.582321], [-16.338627, -71.58308], [-16.338836, -71.583893], [-16.338913, -71.584561], [-16.33906, -71.584679], [-16.339083, -71.585325], [-16.33967, -71.586081], [-16.341075, -71.587251], [-16.341996, -71.585872], [-16.341572, -71.585717], [-16.341242, -71.583262], [-16.341559, -71.582753], [-16.341767, -71.582278], [-16.341888, -71.58234], [-16.342009, -71.582326], [-16.342316, -71.582088], [-16.342411, -71.580575], [-16.342534, -71.578877], [-16.342575, -71.578598], [-16.342658, -71.578139], [-16.342722, -71.577917], [-16.342877, -71.577501], [-16.343, -71.577166], [-16.343124, -71.5769], [-16.343386, -71.576549], [-16.343695, -71.576471], [-16.349724, -71.571208], [-16.346995, -71.567959]], "recs": ["Esta zona es crítica por el riesgo de cruce de áreas de movimiento (TWY/RWY) al trasladarse hacia el cerco, aunque la actividad es de tipo AME.", "Si el acceso o traslado de personal/maquinaria implica cruzar pista o calle de rodaje, coordinar previamente con TWR.", "Detallar el recorrido exacto de acceso en el PVSO.", "Personal debe contar con radio VHF activo si el trabajo se aproxima a áreas de movimiento.", "Reportar cualquier daño detectado en el cerco como peligro SMS (RPI) de forma inmediata.", "Verificar que la maquinaria no supere alturas permitidas en zonas cercanas a la franja de pista."], "isHardZone": false}, {"id": "plb-franja-1", "name": "Franja vehicular PLBs — restricción de altura", "tipo": "INFO", "tipoLabel": "No requiere PVSO — restricción de altura", "type": "ZONA DE RESTRICCIÓN DE ALTURA — PLBs", "tipoNote": "Esta vía pasa bajo los PLBs frente a plataforma. No requiere PVSO, pero la altura máxima de equipos, maquinaria y vehículos es de 3.50 metros.", "cls": "min", "color": "#EF9F27", "isHardZone": false, "coords": [[-16.344041, -71.568982], [-16.344217, -71.568995], [-16.344252, -71.568118], [-16.344086, -71.568108], [-16.344041, -71.568982]], "recs": ["Altura máxima bajo PLBs: 3.50 metros.", "Verificar altura total del equipo antes de transitar.", "Si supera 3.50m, coordinar ruta alternativa con área solicitante de AAP.", "Transitar a velocidad reducida. Mantener personal alejado durante tránsito de maquinaria."]}, {"id": "plb-franja-2", "name": "Franja vehicular PLBs — restricción de altura", "tipo": "INFO", "tipoLabel": "No requiere PVSO — restricción de altura", "type": "ZONA DE RESTRICCIÓN DE ALTURA — PLBs", "tipoNote": "Esta vía pasa bajo los PLBs frente a plataforma. No requiere PVSO, pero la altura máxima de equipos, maquinaria y vehículos es de 3.50 metros.", "cls": "min", "color": "#EF9F27", "isHardZone": false, "coords": [[-16.344086, -71.568108], [-16.34423, -71.568118], [-16.344231, -71.568072], [-16.344085, -71.568065], [-16.344086, -71.568108]], "recs": ["Altura máxima bajo PLBs: 3.50 metros.", "Verificar altura total del equipo antes de transitar.", "Si supera 3.50m, coordinar ruta alternativa con área solicitante de AAP.", "Transitar a velocidad reducida. Mantener personal alejado durante tránsito de maquinaria."]}, {"id": "plb-franja-3", "name": "Franja vehicular PLBs — restricción de altura", "tipo": "INFO", "tipoLabel": "No requiere PVSO — restricción de altura", "type": "ZONA DE RESTRICCIÓN DE ALTURA — PLBs", "tipoNote": "Esta vía pasa bajo los PLBs frente a plataforma. No requiere PVSO, pero la altura máxima de equipos, maquinaria y vehículos es de 3.50 metros.", "cls": "min", "color": "#EF9F27", "isHardZone": false, "coords": [[-16.344085, -71.568065], [-16.344231, -71.568072], [-16.344247, -71.567753], [-16.344101, -71.567749], [-16.344085, -71.568065]], "recs": ["Altura máxima bajo PLBs: 3.50 metros.", "Verificar altura total del equipo antes de transitar.", "Si supera 3.50m, coordinar ruta alternativa con área solicitante de AAP.", "Transitar a velocidad reducida. Mantener personal alejado durante tránsito de maquinaria."]}, {"id": "plb-franja-4", "name": "Franja vehicular PLBs — restricción de altura", "tipo": "INFO", "tipoLabel": "No requiere PVSO — restricción de altura", "type": "ZONA DE RESTRICCIÓN DE ALTURA — PLBs", "tipoNote": "Esta vía pasa bajo los PLBs frente a plataforma. No requiere PVSO, pero la altura máxima de equipos, maquinaria y vehículos es de 3.50 metros.", "cls": "min", "color": "#EF9F27", "isHardZone": false, "coords": [[-16.344101, -71.567749], [-16.344247, -71.567753], [-16.34425, -71.567708], [-16.344099, -71.567703], [-16.344101, -71.567749]], "recs": ["Altura máxima bajo PLBs: 3.50 metros.", "Verificar altura total del equipo antes de transitar.", "Si supera 3.50m, coordinar ruta alternativa con área solicitante de AAP.", "Transitar a velocidad reducida. Mantener personal alejado durante tránsito de maquinaria."]}, {"id": "plb-franja-5", "name": "Franja vehicular PLBs — restricción de altura", "tipo": "INFO", "tipoLabel": "No requiere PVSO — restricción de altura", "type": "ZONA DE RESTRICCIÓN DE ALTURA — PLBs", "tipoNote": "Esta vía pasa bajo los PLBs frente a plataforma. No requiere PVSO, pero la altura máxima de equipos, maquinaria y vehículos es de 3.50 metros.", "cls": "min", "color": "#EF9F27", "isHardZone": false, "coords": [[-16.344101, -71.567704], [-16.344251, -71.56771], [-16.344261, -71.567609], [-16.344413, -71.567619], [-16.344423, -71.56753], [-16.344368, -71.567523], [-16.344379, -71.567377], [-16.34451, -71.567381], [-16.344512, -71.567357], [-16.344691, -71.567373], [-16.344692, -71.567301], [-16.344589, -71.567268], [-16.3446, -71.56699], [-16.344703, -71.566993], [-16.34476, -71.565891], [-16.344274, -71.56585], [-16.344286, -71.565603], [-16.344778, -71.565629], [-16.344805, -71.565187], [-16.344234, -71.565072], [-16.344101, -71.567704]], "recs": ["Altura máxima bajo PLBs: 3.50 metros.", "Verificar altura total del equipo antes de transitar.", "Si supera 3.50m, coordinar ruta alternativa con área solicitante de AAP.", "Transitar a velocidad reducida. Mantener personal alejado durante tránsito de maquinaria."]}];
+
+let selectedZone = null;
+let map = null;
+let pvsoRequired = true;
+
+function onNaturalezaChange() {
+  const naturaleza = document.querySelector('input[name=naturaleza]:checked')?.value;
+  const desplazamientoBlock = document.getElementById('desplazamiento-block');
+  const visitaGuiadaBlock = document.getElementById('visita-guiada-block');
+
+  document.querySelectorAll('input[name=desplazamiento]').forEach(r => r.checked = false);
+  visitaGuiadaBlock.style.display = 'none';
+  pvsoRequired = true;
+  setPvsoSectionsVisibility(true);
+
+  if (naturaleza === 'campo') {
+    desplazamientoBlock.style.display = 'none';
+  } else if (naturaleza === 'visita') {
+    desplazamientoBlock.style.display = 'block';
+  } else {
+    desplazamientoBlock.style.display = 'none';
+  }
+}
+
+function onDesplazamientoChange() {
+  const desplazamiento = document.querySelector('input[name=desplazamiento]:checked')?.value;
+  const visitaGuiadaBlock = document.getElementById('visita-guiada-block');
+
+  if (desplazamiento === 'pie') {
+    pvsoRequired = false;
+    visitaGuiadaBlock.style.display = 'block';
+    setPvsoSectionsVisibility(false);
+  } else if (desplazamiento === 'vehiculo') {
+    pvsoRequired = true;
+    visitaGuiadaBlock.style.display = 'none';
+    setPvsoSectionsVisibility(true);
+  }
+}
+
+function setPvsoSectionsVisibility(visible) {
+  const sectionsToToggle = ['periodo-trabajo-card', 'equipos-personal-card', 'cronograma-card',
+    'cercamiento-card', 'senalizacion-card', 'equipos-card', 'rutas-card', 'contactos-card',
+    'num-personal-card', 'carta-compromiso-card', 'documentos-adjuntos-card'];
+  sectionsToToggle.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = visible ? 'block' : 'none';
+  });
+}
+
+function initMap() {
+  if (map) return;
+  map = L.map('map', {center:[-16.3420,-71.5680], zoom:14, attributionControl:false});
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom: 20
+  }).addTo(map);
+
+  ZONES.forEach(z => {
+    const poly = L.polygon(z.coords, {
+      color: z.color, fillColor: z.color,
+      fillOpacity: 0.4,
+      weight: 2,
+      opacity: 0.9
+    }).addTo(map);
+
+    poly.on('click', () => selectZone(z, poly));
+    poly.on('mouseover', function(){ this.setStyle({fillOpacity: 0.6}); });
+    poly.on('mouseout', function(){ this.setStyle({fillOpacity: 0.4}); });
+    z._poly = poly;
+  });
+
+  setTimeout(() => { map.invalidateSize(); initMapRutas(); }, 200);
+}
+
+function onAirportChange() {
+  const ap = document.getElementById('aeropuerto').value;
+  if (ap === 'AQP') {
+    document.getElementById('map-section-AQP').style.display = 'block';
+    document.getElementById('map-section-other').style.display = 'none';
+    initMap();
+  } else if (ap) {
+    document.getElementById('map-section-AQP').style.display = 'none';
+    document.getElementById('map-section-other').style.display = 'block';
+    document.getElementById('zona-texto').classList.remove('auto-filled');
+    document.getElementById('zona-texto').readOnly = false;
+    document.getElementById('zona-texto').value = '';
+    document.getElementById('zona-texto').placeholder = 'Describe la zona de trabajo (ej. plataforma, calle de rodaje, terminal)';
+    document.getElementById('tipo-actividad').value = '';
+    document.getElementById('tipo-note').style.display = 'none';
+    document.getElementById('zone-panel').style.display = 'none';
+    selectedZone = null;
+  } else {
+    document.getElementById('map-section-AQP').style.display = 'block';
+    document.getElementById('map-section-other').style.display = 'none';
+  }
+}
+
+function selectZone(z, poly) {
+  if (selectedZone && selectedZone._poly) {
+    selectedZone._poly.setStyle({weight:2});
+  }
+  selectedZone = z;
+  poly.setStyle({weight:4});
+
+  const zonaInput = document.getElementById('zona-texto');
+  zonaInput.value = z.name;
+  zonaInput.classList.add('auto-filled');
+  zonaInput.readOnly = true;
+
+  document.getElementById('no-zone-msg').style.display = 'none';
+
+  // Caso PLB: solo advertencia de altura, sin flujo PVSO
+  if (z.id && z.id.startsWith('plb')) {
+    if (updateTipoActividad_checkPLB(z)) {
+      renderZonePanel(z, false, false);
+      return;
+    }
+  }
+
+  const naturaleza = document.querySelector('input[name=naturaleza]:checked')?.value;
+  const desplazamiento = document.querySelector('input[name=desplazamiento]:checked')?.value;
+  const esVisitaAPie = (naturaleza === 'visita' && desplazamiento === 'pie');
+  const esVisitaVehiculo = (naturaleza === 'visita' && desplazamiento === 'vehiculo');
+
+  const horarioPanel = document.getElementById('horario-panel');
+  const fueraHorarioCheckbox = document.getElementById('fuera-horario');
+
+  if (esVisitaAPie) {
+    // Visita a pie: sin NOTAM, sin AMA/AME, solo acompañamiento
+    horarioPanel.style.display = 'none';
+    document.getElementById('horario-note').textContent = '';
+    updateTipoActividadVisita(z);
+  } else if (esVisitaVehiculo) {
+    // Visita con vehículo: PVSO requerido pero siempre AME, nunca AMA
+    horarioPanel.style.display = 'none';
+    document.getElementById('horario-note').textContent = '';
+    updateTipoActividadVisitaVehiculo(z);
+  } else if (z.isHardZone) {
+    // Actividad de campo en zona dura: AMA/AME según horario
+    horarioPanel.style.display = 'block';
+    fueraHorarioCheckbox.checked = false;
+    updateTipoActividad(z, false);
+  } else {
+    horarioPanel.style.display = 'none';
+    document.getElementById('horario-note').textContent = '';
+    updateTipoActividad(z, null);
+  }
+
+  renderZonePanel(z, esVisitaAPie, esVisitaVehiculo);
+}
+
+function onHorarioChange() {
+  if (!selectedZone) return;
+  const fuera = document.getElementById('fuera-horario').checked;
+  updateTipoActividad(selectedZone, fuera);
+  // Recalcular alerta de rutas si ya hay puntos trazados
+  if (rutaPoints.length > 1) checkRutaCruces();
+}
+
+function updateTipoActividad_checkPLB(z) {
+  // Si es zona PLB, no clasificar como AMA/AME
+  if (z.id && z.id.startsWith('plb')) {
+    document.getElementById('tipo-actividad').value = 'No requiere PVSO — restricción de altura';
+    const note = document.getElementById('tipo-note');
+    note.textContent = 'Esta zona no genera PVSO. Es una restricción física: equipos y vehículos no deben superar 3.50 metros de altura al transitar bajo los PLBs.';
+    note.style.display = 'block';
+    document.getElementById('horario-panel').style.display = 'none';
+    return true;
+  }
+  return false;
+}
+
+function updateTipoActividadVisita(z) {
+  const tipoInput = document.getElementById('tipo-actividad');
+  const note = document.getElementById('tipo-note');
+  const esCritica = z.cls === 'crit' || z.cls === 'crit-menor';
+  if (esCritica) {
+    tipoInput.value = 'Visita con acompañamiento — zona crítica';
+    note.textContent = 'Zona crítica. La visita requiere acompañamiento obligatorio de personal AAP (guía) en todo momento. El guía debe contar con radio VHF activo. No aplica NOTAM ni clasificación AMA/AME para visitas a pie con guía (Norma A.5.3).';
+  } else {
+    tipoInput.value = 'Visita — zona no crítica';
+    note.textContent = '';
+  }
+  note.style.display = esCritica ? 'block' : 'none';
+}
+
+function updateTipoActividadVisitaVehiculo(z) {
+  const tipoInput = document.getElementById('tipo-actividad');
+  const note = document.getElementById('tipo-note');
+  const esCritica = z.cls === 'crit' || z.cls === 'crit-menor';
+  if (esCritica) {
+    tipoInput.value = 'AME — Actividad Menor (visita con vehículo en zona crítica)';
+    note.textContent = 'Al tratarse de una visita (sin trabajo de campo), la actividad es de tipo AME aunque el vehículo ingrese a zona crítica. Requiere PVSO completo y coordinación con el área solicitante de AAP. El SLA confirmará las condiciones de acceso vehicular.';
+  } else {
+    tipoInput.value = 'AME — Actividad Menor (visita con vehículo)';
+    note.textContent = 'Visita con vehículo en zona no crítica. Requiere PVSO simplificado y Carta G de facilidades vehiculares.';
+  }
+  note.style.display = 'block';
+}
+
+function updateTipoActividad(z, fueraHorario) {
+  const tipoInput = document.getElementById('tipo-actividad');
+  const note = document.getElementById('tipo-note');
+  const horarioNote = document.getElementById('horario-note');
+
+  if (z.isHardZone) {
+    if (fueraHorario) {
+      tipoInput.value = 'AME — Actividad Menor (fuera de horario operativo)';
+      note.textContent = 'Al realizarse fuera del horario operativo de AQP (05:00–23:00), esta actividad en zona crítica no requiere NOTAM. Clasificación sujeta a confirmación del SLA.';
+      horarioNote.textContent = 'Fuera de horario operativo: no se requiere NOTAM, sujeto a validación del SLA.';
+    } else {
+      tipoInput.value = 'AMA — Actividad Mayor (requiere NOTAM)';
+      note.textContent = z.tipoNote;
+      horarioNote.textContent = 'Dentro de horario operativo (05:00–23:00): esta zona crítica siempre requiere NOTAM.';
+    }
+  } else {
+    tipoInput.value = z.tipoLabel;
+    note.textContent = z.tipoNote;
+  }
+  note.style.display = 'block';
+}
+
+function renderZonePanel(z, esVisitaAPie, esVisitaVehiculo) {
+  const panel = document.getElementById('zone-panel');
+  panel.style.display = 'block';
+
+  if (esVisitaAPie) {
+    const esCritica = z.cls === 'crit' || z.cls === 'crit-menor';
+    if (!esCritica) {
+      // Zona no crítica: mostrar recomendaciones generales de seguridad
+      panel.style.display = 'block';
+      const recsGenerales = [
+        'Porta siempre tu identificación y fotocheck de visitante visible a la altura del pecho durante toda tu permanencia en el aeropuerto.',
+        'Respeta estrictamente las señalizaciones de acceso, velocidad y tránsito dentro de las instalaciones del aeropuerto.',
+        'Está terminantemente prohibido fumar, encender fuego o consumir bebidas alcohólicas dentro de las instalaciones aeroportuarias.',
+        'No ingreses a zonas restringidas sin autorización expresa. Si te encuentras en una zona incorrecta, notifícalo de inmediato al personal de AAP.',
+        'Ante cualquier emergencia, sigue las instrucciones del personal de AAP y dirígete al punto de reunión más cercano.',
+        'Reporta cualquier objeto sospechoso, daño en las instalaciones o situación anormal al personal de AAP de inmediato.',
+        'El fotocheck de visitante debe ser devuelto el mismo día en que fue entregado.'
+      ];
+      const recsHtml = recsGenerales.map(r =>
+        `<div class="rec"><div class="rec-dot"></div><span>${r}</span></div>`
+      ).join('');
+      panel.innerHTML = `
+        <div class="zone-alert min" style="margin-top:1rem">
+          <div class="zone-alert-header">
+            <div>
+              <div style="font-size:11px;color:var(--gray-600);text-transform:uppercase;margin-bottom:3px">${z.type}</div>
+              <div class="zone-name">${z.name}</div>
+            </div>
+            <div class="zone-badge">Zona no crítica — recomendaciones generales</div>
+          </div>
+          <div class="zone-recs">
+            <div class="zone-recs-title">Recomendaciones generales de seguridad para el ingreso al aeropuerto</div>
+            ${recsHtml}
+          </div>
+        </div>`;
+      return;
+    }
+    // Zona crítica en modo visita: mostrar condiciones de acompañamiento
+    const recsVisita = [
+      'El guía de AAP debe acompañar al visitante en todo momento — ninguna persona puede quedar sola en esta zona.',
+      'El guía debe contar con radio VHF activo y comunicación permanente con TWR o Jefe de Base.',
+      'Chaleco reflectivo naranja obligatorio para el visitante en todo momento dentro del lado aire.',
+      'El acceso a pie al área de maniobras requiere autorización expresa de la administración del aeropuerto (Norma A.5.3).',
+      'El visitante debe respetar estrictamente las sendas peatonales señalizadas y no separarse del guía.',
+      'Registrar el ingreso en el sistema de facilidades correspondiente.'
+    ];
+    const recsHtml = recsVisita.map(r =>
+      `<div class="rec"><div class="rec-dot"></div><span>${r}</span></div>`
+    ).join('');
+    panel.innerHTML = `
+      <div class="zone-alert crit-menor" style="margin-top:1rem">
+        <div class="zone-alert-header">
+          <div>
+            <div style="font-size:11px;color:var(--gray-600);text-transform:uppercase;margin-bottom:3px">${z.type} — MODALIDAD VISITA</div>
+            <div class="zone-name">${z.name}</div>
+          </div>
+          <div class="zone-badge">Zona crítica — visita con acompañamiento obligatorio</div>
+        </div>
+        <div class="zone-recs">
+          <div class="zone-recs-title">Condiciones de acceso para visita con guía AAP</div>
+          ${recsHtml}
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Visita con vehículo: mostrar zona pero con badge AME, no AMA
+  if (esVisitaVehiculo) {
+    const esCritica = z.cls === 'crit' || z.cls === 'crit-menor';
+    const colorCls = esCritica ? 'crit-menor' : 'min';
+    const badgeText = esCritica
+      ? 'Zona crítica — visita con vehículo (AME)'
+      : 'Zona no crítica — visita con vehículo';
+    const recsVehiculo = esCritica ? [
+      'Al ser visita (sin trabajo de campo), la actividad es AME aunque el vehículo ingrese a zona crítica.',
+      'Requiere Carta G de Facilidades Vehiculares firmada por el representante legal con V°B° del área solicitante de AAP.',
+      'El vehículo debe estar en perfectas condiciones técnicas: SOAT vigente, certificado de inspección técnica y licencia de conducir del conductor.',
+      'Velocidad máxima en área de movimiento: 30 km/h. Circular siempre con luces de cruce encendidas.',
+      'El conductor debe ceder el paso en todo momento a las aeronaves en movimiento.',
+      'Requiere coordinación previa con el área solicitante de AAP para definir la ruta de acceso vehicular.'
+    ] : [
+      'Requiere Carta G de Facilidades Vehiculares.',
+      'Respetar señalizaciones de velocidad y tránsito dentro del aeropuerto.',
+      'Coordinar con el área solicitante de AAP el acceso y la ruta vehicular.'
+    ];
+    const recsHtml = recsVehiculo.map(r =>
+      `<div class="rec"><div class="rec-dot"></div><span>${r}</span></div>`
+    ).join('');
+    panel.innerHTML = `
+      <div class="zone-alert ${colorCls}" style="margin-top:1rem">
+        <div class="zone-alert-header">
+          <div>
+            <div style="font-size:11px;color:var(--gray-600);text-transform:uppercase;margin-bottom:3px">${z.type} — MODALIDAD VISITA CON VEHÍCULO</div>
+            <div class="zone-name">${z.name}</div>
+          </div>
+          <div class="zone-badge">${badgeText}</div>
+        </div>
+        <div class="zone-recs">
+          <div class="zone-recs-title">Condiciones para visita con vehículo propio</div>
+          ${recsHtml}
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Caso especial: zona PLB — solo advertencia de altura, sin clasificación
+  if (z.id && z.id.startsWith('plb')) {
+    const recsHtml = z.recs.map(r =>
+      `<div class="rec"><div class="rec-dot" style="background:var(--warning)"></div><span>${r}</span></div>`
+    ).join('');
+    panel.innerHTML = `
+      <div class="zone-alert crit-menor" style="margin-top:1rem">
+        <div class="zone-alert-header">
+          <div>
+            <div style="font-size:11px;color:var(--gray-600);text-transform:uppercase;margin-bottom:3px">${z.type}</div>
+            <div class="zone-name">${z.name}</div>
+          </div>
+          <div class="zone-badge" style="background:var(--warning);color:white">⚠ Restricción de altura — 3.50 m</div>
+        </div>
+        <div class="zone-recs">
+          <div class="zone-recs-title">Esta zona no requiere PVSO — solo restricción física</div>
+          ${recsHtml}
+        </div>
+      </div>`;
+    return;
+  }
+
+  const recsHtml = z.recs.map(r =>
+    `<div class="rec"><div class="rec-dot"></div><span>${r}</span></div>`
+  ).join('');
+  let badgeText;
+  if (z.cls === 'crit') badgeText = 'Zona crítica — actividad mayor';
+  else if (z.cls === 'crit-menor') badgeText = 'Zona crítica — actividad menor';
+  else badgeText = 'Zona no crítica';
+  panel.innerHTML = `
+    <div class="zone-alert ${z.cls}" style="margin-top:1rem">
+      <div class="zone-alert-header">
+        <div>
+          <div style="font-size:11px;color:var(--gray-600);text-transform:uppercase;margin-bottom:3px">${z.type}</div>
+          <div class="zone-name">${z.name}</div>
+        </div>
+        <div class="zone-badge">${badgeText}</div>
+      </div>
+      <div class="zone-recs">
+        <div class="zone-recs-title">Recomendaciones SMS para esta zona</div>
+        ${recsHtml}
+      </div>
+    </div>`;
+}
+
+function showFileName(input) {
+  const fn = document.getElementById('file-name');
+  if (input.files && input.files[0]) {
+    fn.textContent = '✓ ' + input.files[0].name;
+    fn.style.display = 'block';
+  }
+}
+
+async function fileToBase64(input) {
+  if (!input || !input.files || !input.files[0]) return null;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.readAsDataURL(input.files[0]);
+  });
+}
+
+function showFileNameMulti(input, targetId) {
+  const fn = document.getElementById(targetId);
+  if (input.files && input.files[0]) {
+    fn.textContent = '✓ ' + input.files[0].name;
+    fn.style.display = 'block';
+    fn.style.fontSize = '13px';
+    fn.style.color = 'var(--success)';
+    fn.style.marginTop = '6px';
+    fn.style.fontWeight = '500';
+  }
+}
+
+// ─── MAPA DE RUTAS ──────────────────────────────────────────────────────────
+let mapRutas = null;
+let rutaPoints = [];
+let rutaMarkers = [];
+let rutaPolyline = null;
+
+function initMapRutas() {
+  if (mapRutas) return;
+  mapRutas = L.map('map-rutas', {center:[-16.3388,-71.5680], zoom:15, attributionControl:false});
+  L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+    maxZoom:20
+  }).addTo(mapRutas);
+
+  // Dibujar zonas críticas de referencia con opacidad reducida
+  ZONES.forEach(z => {
+    L.polygon(z.coords, {
+      color: z.color, fillColor: z.color,
+      fillOpacity: 0.15, weight: 1.5, opacity: 0.6
+    }).addTo(mapRutas);
+  });
+
+  mapRutas.on('click', function(e) {
+    addRutaPoint(e.latlng);
+  });
+
+  setTimeout(() => mapRutas.invalidateSize(), 200);
+}
+
+function addRutaPoint(latlng) {
+  const pt = [parseFloat(latlng.lat.toFixed(6)), parseFloat(latlng.lng.toFixed(6))];
+  rutaPoints.push(pt);
+
+  const marker = L.circleMarker(latlng, {
+    radius: 5, color: '#185FA5', fillColor: '#185FA5', fillOpacity: 1, weight: 2
+  }).addTo(mapRutas);
+  rutaMarkers.push(marker);
+
+  if (rutaPolyline) mapRutas.removeLayer(rutaPolyline);
+  if (rutaPoints.length > 1) {
+    rutaPolyline = L.polyline(rutaPoints, {
+      color: '#185FA5', weight: 3, dashArray: '8,4'
+    }).addTo(mapRutas);
+  }
+
+  checkRutaCruces();
+}
+
+function checkRutaCruces() {
+  const alerta = document.getElementById('ruta-alerta');
+  if (rutaPoints.length < 2) { alerta.style.display = 'none'; return; }
+
+  const zonasCruzadas = [];
+  const plbsCruzados = [];
+  ZONES.filter(z => z.isHardZone).forEach(z => {
+    if (rutaCruzaZona(rutaPoints, z.coords)) zonasCruzadas.push(z.name);
+  });
+  ZONES.filter(z => z.id && z.id.startsWith('plb')).forEach(z => {
+    if (rutaCruzaZona(rutaPoints, z.coords)) plbsCruzados.push(z.name);
+  });
+
+  const naturalezaRuta = document.querySelector('input[name=naturaleza]:checked')?.value;
+  const desplazamientoRuta = document.querySelector('input[name=desplazamiento]:checked')?.value;
+  const esVisitaRuta = (naturalezaRuta === 'visita');
+  const fueraHorarioRuta = document.getElementById('fuera-horario')?.checked || false;
+
+  if (zonasCruzadas.length > 0) {
+    alerta.style.display = 'block';
+    // Determinar si aplica AME o AMA
+    const esAME = esVisitaRuta || fueraHorarioRuta;
+
+    if (esAME) {
+      alerta.style.background = 'var(--warning-bg)';
+      alerta.style.border = '0.5px solid var(--warning-border)';
+      alerta.style.color = 'var(--warning)';
+      let razon = '';
+      if (esVisitaRuta) {
+        const medio = desplazamientoRuta === 'pie' ? 'visita a pie con guía' : 'visita con vehículo propio';
+        razon = 'Al tratarse de una ' + medio + ',';
+      } else if (fueraHorarioRuta) {
+        razon = 'Al realizarse fuera del horario operativo de AQP (05:00–23:00),';
+      }
+      alerta.innerHTML = '<strong>⚠ La ruta cruza zonas críticas:</strong> ' +
+        zonasCruzadas.join(', ') + '. ' + razon +
+        ' la clasificación es <strong>AME — Actividad Menor</strong>. ' +
+        'El SLA validará las condiciones de cruce y confirmará la ruta autorizada.' +
+        (plbsCruzados.length > 0
+          ? ' <strong>⚠ Restricción PLBs AQP:</strong> La ruta también pasa por zona de PLBs. Altura máxima permitida: <strong>3.50 metros</strong>.'
+          : '');
+    } else {
+      alerta.style.background = 'var(--danger-bg)';
+      alerta.style.border = '0.5px solid var(--danger-border)';
+      alerta.style.color = 'var(--danger)';
+      alerta.innerHTML = '<strong>⚠ La ruta trazada cruza zonas críticas:</strong> ' +
+        zonasCruzadas.join(', ') +
+        '. Esto confirma que tu actividad requiere PVSO con clasificación <strong>AMA — Actividad Mayor</strong>. ' +
+        'El SLA validará las condiciones de cruce y el horario de acceso.' +
+        (plbsCruzados.length > 0
+          ? ' <strong>⚠ Restricción PLBs AQP:</strong> La ruta también pasa por zona de PLBs. Altura máxima: <strong>3.50 metros</strong>.'
+          : '');
+    }
+  } else if (plbsCruzados.length > 0) {
+    alerta.style.display = 'block';
+    alerta.style.background = 'var(--warning-bg)';
+    alerta.style.border = '0.5px solid var(--warning-border)';
+    alerta.style.color = 'var(--warning)';
+    alerta.innerHTML = '<strong>⚠ La ruta pasa por zona de PLBs:</strong> ' + plbsCruzados.join(', ') +
+      '. <strong>Altura máxima permitida para equipos, maquinaria y vehículos: 3.50 metros.</strong> ' +
+      'Si tu equipo supera esta medida, coordina una ruta alternativa con el área solicitante de AAP.';
+  } else {
+    alerta.style.display = 'block';
+    alerta.style.background = 'var(--success-bg)';
+    alerta.style.border = '0.5px solid var(--success-border)';
+    alerta.style.color = 'var(--success)';
+    alerta.innerHTML = '✓ La ruta trazada no cruza zonas críticas de área de maniobras.';
+  }
+}
+
+function rutaCruzaZona(points, zoneCoords) {
+  // Verificar si algún punto de la ruta está dentro del polígono de la zona
+  for (const pt of points) {
+    if (pointInPolygon(pt, zoneCoords)) return true;
+  }
+  return false;
+}
+
+function pointInPolygon(point, polygon) {
+  let inside = false;
+  const x = point[0], y = point[1];
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i][0], yi = polygon[i][1];
+    const xj = polygon[j][0], yj = polygon[j][1];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function undoRutaPoint() {
+  if (!rutaPoints.length) return;
+  rutaPoints.pop();
+  const last = rutaMarkers.pop();
+  if (last) mapRutas.removeLayer(last);
+  if (rutaPolyline) { mapRutas.removeLayer(rutaPolyline); rutaPolyline = null; }
+  if (rutaPoints.length > 1) {
+    rutaPolyline = L.polyline(rutaPoints, {color:'#185FA5', weight:3, dashArray:'8,4'}).addTo(mapRutas);
+  }
+  checkRutaCruces();
+}
+
+function clearRuta() {
+  rutaPoints = [];
+  rutaMarkers.forEach(m => mapRutas.removeLayer(m));
+  rutaMarkers = [];
+  if (rutaPolyline) { mapRutas.removeLayer(rutaPolyline); rutaPolyline = null; }
+  document.getElementById('ruta-alerta').style.display = 'none';
+}
+
+// ─── FIRMA CANVAS ─────────────────────────────────────────────────────────
+let firmaCanvas, firmaCtx, isDrawing = false, hasSignature = false;
+
+function initFirma() {
+  firmaCanvas = document.getElementById('firma-canvas');
+  const rect = firmaCanvas.getBoundingClientRect();
+  firmaCanvas.width = rect.width * 2;
+  firmaCanvas.height = rect.height * 2;
+  firmaCtx = firmaCanvas.getContext('2d');
+  firmaCtx.scale(2,2);
+  firmaCtx.strokeStyle = '#0D3B6E';
+  firmaCtx.lineWidth = 2;
+  firmaCtx.lineCap = 'round';
+
+  function getPos(e) {
+    const r = firmaCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - r.left, y: clientY - r.top };
+  }
+  function start(e) {
+    isDrawing = true;
+    hasSignature = true;
+    const p = getPos(e);
+    firmaCtx.beginPath();
+    firmaCtx.moveTo(p.x, p.y);
+    e.preventDefault();
+  }
+  function move(e) {
+    if (!isDrawing) return;
+    const p = getPos(e);
+    firmaCtx.lineTo(p.x, p.y);
+    firmaCtx.stroke();
+    e.preventDefault();
+  }
+  function end() { isDrawing = false; }
+
+  firmaCanvas.addEventListener('mousedown', start);
+  firmaCanvas.addEventListener('mousemove', move);
+  firmaCanvas.addEventListener('mouseup', end);
+  firmaCanvas.addEventListener('mouseleave', end);
+  firmaCanvas.addEventListener('touchstart', start);
+  firmaCanvas.addEventListener('touchmove', move);
+  firmaCanvas.addEventListener('touchend', end);
+}
+
+function clearFirma() {
+  firmaCtx.clearRect(0, 0, firmaCanvas.width, firmaCanvas.height);
+  hasSignature = false;
+}
+
+window.addEventListener('load', initFirma);
+
+// ─── VALIDATION ──────────────────────────────────────────────────────────
+function validate() {
+  let ok = true;
+
+  const naturaleza = document.querySelector('input[name=naturaleza]:checked')?.value;
+  if (!naturaleza) {
+    document.getElementById('err-naturaleza').classList.add('visible');
+    ok = false;
+  } else {
+    document.getElementById('err-naturaleza').classList.remove('visible');
+  }
+
+  if (naturaleza === 'visita') {
+    const desplazamiento = document.querySelector('input[name=desplazamiento]:checked')?.value;
+    if (!desplazamiento) {
+      document.getElementById('err-desplazamiento').classList.add('visible');
+      ok = false;
+    } else {
+      document.getElementById('err-desplazamiento').classList.remove('visible');
+    }
+  }
+
+  const baseRequired = [
+    {id:'ruc', err:'err-ruc', pattern:/^\d{11}$/},
+    {id:'empresa', err:'err-empresa'},
+    {id:'contacto', err:'err-contacto'},
+    {id:'aeropuerto', err:'err-aeropuerto'},
+    {id:'area-responsable', err:'err-area-responsable'},
+  ];
+  baseRequired.forEach(f => {
+    const el = document.getElementById(f.id);
+    const errEl = document.getElementById(f.err);
+    const valid = el.value.trim() && (!f.pattern || f.pattern.test(el.value.trim()));
+    if (!valid) { el.classList.add('error'); errEl.classList.add('visible'); ok = false; }
+    else { el.classList.remove('error'); errEl.classList.remove('visible'); }
+  });
+
+  const emailEl = document.getElementById('email');
+  const emailErr = document.getElementById('err-email');
+  if (!emailEl.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    emailEl.classList.add('error'); emailErr.classList.add('visible'); ok = false;
+  } else {
+    emailEl.classList.remove('error'); emailErr.classList.remove('visible');
+  }
+
+  const ap = document.getElementById('aeropuerto').value;
+  if (ap === 'AQP' && !selectedZone) {
+    document.getElementById('no-zone-msg').style.display = 'block';
+    ok = false;
+  } else if (ap !== 'AQP' && !document.getElementById('zona-texto').value.trim()) {
+    document.getElementById('zona-texto').classList.add('error');
+    ok = false;
+  }
+
+  // Leer adjuntos como base64
+  const [b64Cronograma, b64Cercamiento, b64CartaC, b64CartaG, b64CartaI] = await Promise.all([
+    fileToBase64(document.getElementById('archivo-cronograma')),
+    fileToBase64(document.getElementById('archivo-cercamiento')),
+    fileToBase64(document.getElementById('archivo-carta-c')),
+    fileToBase64(document.getElementById('archivo-carta-g')),
+    fileToBase64(document.getElementById('archivo-carta-i')),
+  ]);
+
+  if (!pvsoRequired) {
+    const guiaRequired = [
+      {id:'guia-nombre', err:'err-guia-nombre'},
+      {id:'guia-area', err:'err-guia-area'},
+      {id:'motivo-visita', err:'err-motivo-visita'},
+    ];
+    guiaRequired.forEach(f => {
+      const el = document.getElementById(f.id);
+      const errEl = document.getElementById(f.err);
+      if (!el || !errEl) return;
+      if (!el.value.trim()) { el.classList.add('error'); errEl.classList.add('visible'); ok = false; }
+      else { el.classList.remove('error'); errEl.classList.remove('visible'); }
+    });
+    return ok;
+  }
+
+  const fullRequired = [
+    {id:'tipo-atencion', err:'err-tipo-atencion'},
+    {id:'fecha-ingreso', err:'err-fecha-ingreso'},
+    {id:'fecha-salida', err:'err-fecha-salida'},
+    {id:'objeto', err:'err-objeto'},
+    {id:'cronograma', err:'err-cronograma'},
+    {id:'senalizacion', err:'err-senalizacion'},
+    {id:'rutas', err:'err-rutas'},
+    {id:'emergencia-nombre', err:'err-emergencia-nombre'},
+    {id:'emergencia-celular', err:'err-emergencia-celular'},
+    {id:'responsable-tercero', err:'err-responsable-tercero'},
+    {id:'responsable-tercero-celular', err:'err-responsable-tercero-celular'},
+    {id:'responsable-tercero-correo', err:'err-responsable-tercero-correo'},
+    {id:'reso-aap-nombre', err:'err-reso-aap-nombre'},
+    {id:'reso-aap-area', err:'err-reso-aap-area'},
+    {id:'reso-aap-celular', err:'err-reso-aap-celular'},
+    {id:'reso-aap-correo', err:'err-reso-aap-correo'},
+    {id:'num-personal', err:'err-num-personal'},
+    {id:'rep-legal', err:'err-rep-legal'},
+    {id:'rep-dni', err:'err-rep-dni', pattern:/^\d{8}$/},
+  ];
+  fullRequired.forEach(f => {
+    const el = document.getElementById(f.id);
+    const errEl = document.getElementById(f.err);
+    if (!el || !errEl) return; // skip si el elemento no existe en el DOM
+    const valid = el.value.trim() && (!f.pattern || f.pattern.test(el.value.trim()));
+    if (!valid) { el.classList.add('error'); errEl.classList.add('visible'); ok = false; }
+    else { el.classList.remove('error'); errEl.classList.remove('visible'); }
+  });
+
+  // Validar correos adicionales
+  ['responsable-tercero-correo','reso-aap-correo'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+      el.classList.add('error');
+      const err = document.getElementById('err-' + id);
+      if (err) err.classList.add('visible');
+      ok = false;
+    }
+  });
+
+  if (!hasSignature) {
+    document.getElementById('err-firma').classList.add('visible'); ok = false;
+  } else {
+    document.getElementById('err-firma').classList.remove('visible');
+  }
+
+  if (!document.getElementById('acepta-carta').checked) {
+    document.getElementById('err-acepta-carta').classList.add('visible'); ok = false;
+  } else {
+    document.getElementById('err-acepta-carta').classList.remove('visible');
+  }
+
+  return ok;
+}
+
+// ─── SUBMIT ──────────────────────────────────────────────────────────────
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLLrTb5zJ4wJGDdDwEpz3eWAsNAkCOR5pmxu7f5XZ0jNlkisuMPp8NK-0zfwgUGZuX/exec';
+
+async function submitForm() {
+  if (!validate()) {
+    const firstError = document.querySelector('.error-msg.visible');
+    if (firstError) window.scrollTo({top: firstError.offsetTop - 150, behavior:'smooth'});
+    return;
+  }
+  const btn = document.querySelector('.btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Enviando…';
+
+  const naturaleza = document.querySelector('input[name=naturaleza]:checked')?.value;
+  const desplazamiento = document.querySelector('input[name=desplazamiento]:checked')?.value || '';
+
+  let payload = {
+    ruc: document.getElementById('ruc').value,
+    empresa: document.getElementById('empresa').value,
+    contacto: document.getElementById('contacto').value,
+    email: document.getElementById('email').value,
+    aeropuerto: document.getElementById('aeropuerto').value,
+    area_responsable: document.getElementById('area-responsable').value,
+    naturaleza_actividad: naturaleza,
+    desplazamiento: desplazamiento,
+    zona: document.getElementById('zona-texto').value,
+    pvso_requerido: pvsoRequired,
+    estado: 'PENDIENTE_REVISION',
+    timestamp: new Date().toISOString()
+  };
+
+  if (!pvsoRequired) {
+    payload = {
+      ...payload,
+      guia_nombre: document.getElementById('guia-nombre').value,
+      guia_area: document.getElementById('guia-area').value,
+      motivo_visita: document.getElementById('motivo-visita').value,
+      tipo_facilidad: 'D — Visita'
+    };
+  } else {
+    const firmaDataUrl = firmaCanvas.toDataURL('image/png');
+    payload = {
+      ...payload,
+      tipo_actividad: document.getElementById('tipo-actividad').value,
+      fuera_horario_operativo: document.getElementById('fuera-horario').checked,
+      item1_tipo_atencion: document.getElementById('tipo-atencion').value,
+      item1_fecha_ingreso_solicitada: document.getElementById('fecha-ingreso').value,
+      item1_fecha_salida_solicitada: document.getElementById('fecha-salida').value,
+      item3_objeto: document.getElementById('objeto').value,
+      item5_cronograma: document.getElementById('cronograma').value,
+      item6_ubicacion: document.getElementById('zona-texto').value,
+      item7_area_cercamiento: document.getElementById('area-cercamiento').value,
+      item8_senalizacion: document.getElementById('senalizacion').value,
+      item9_equipos_menores: document.getElementById('equipos-menores').value,
+      item9_equipos_mayores: document.getElementById('equipos-mayores').value,
+      item9_equipo_altura: document.getElementById('equipo-altura').value,
+      item9_equipo_anchura: document.getElementById('equipo-anchura').value,
+      item10_rutas: document.getElementById('rutas').value,
+      item11_emergencia_nombre: document.getElementById('emergencia-nombre').value,
+      item11_emergencia_celular: document.getElementById('emergencia-celular').value,
+      item11_reso_tercero: document.getElementById('responsable-tercero').value,
+      item11_reso_tercero_celular: document.getElementById('responsable-tercero-celular').value,
+      item11_reso_tercero_correo: document.getElementById('responsable-tercero-correo').value,
+      item11_reso_aap_nombre: document.getElementById('reso-aap-nombre').value,
+      item11_reso_aap_area: document.getElementById('reso-aap-area').value,
+      item11_reso_aap_celular: document.getElementById('reso-aap-celular').value,
+      item11_reso_aap_correo: document.getElementById('reso-aap-correo').value,
+      ruta_puntos: JSON.stringify(rutaPoints),
+      zona_seleccionada_coords: selectedZone ? JSON.stringify(selectedZone.coords) : '',
+      ruta_cruza_critica: rutaPoints.length > 1 ? document.getElementById('ruta-alerta').style.background.includes('danger') : false,
+      num_personal: document.getElementById('num-personal').value,
+      rep_legal: document.getElementById('rep-legal').value,
+      rep_dni: document.getElementById('rep-dni').value,
+      firma_base64: firmaDataUrl,
+      archivo_cronograma_b64: b64Cronograma || '',
+      archivo_cercamiento_b64: b64Cercamiento || '',
+      archivo_carta_c_b64: b64CartaC || '',
+      archivo_carta_g_b64: b64CartaG || '',
+      archivo_carta_i_b64: b64CartaI || '',
+      estado_items: 'PENDIENTE_REVISION_SLA',
+      responsable_sms_aap: '',
+      supervisor_lado_aire: '',
+      codigo_interno: '',
+    };
+  }
+
+  if (APPS_SCRIPT_URL === 'AQUI_VA_TU_URL') {
+    setTimeout(() => showSuccess(payload), 1200);
+    return;
+  }
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    showSuccess(payload);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Enviar solicitud PVSO';
+    alert('Error al enviar. Verifica tu conexión e intenta nuevamente.');
+  }
+}
+
+function showSuccess(payload) {
+  document.getElementById('main-form').style.display = 'none';
+  const ss = document.getElementById('success-screen');
+  ss.style.display = 'block';
+  const ref = 'PVSO-' + payload.aeropuerto + '-' + Date.now().toString().slice(-6);
+  document.getElementById('ref-num').textContent = ref;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function resetForm() {
+  document.getElementById('main-form').style.display = 'block';
+  document.getElementById('success-screen').style.display = 'none';
+  document.querySelectorAll('input:not([type=file]):not([type=checkbox]):not([type=radio]), select, textarea').forEach(el => el.value = '');
+  document.getElementById('acepta-carta').checked = false;
+  document.querySelectorAll('input[name=naturaleza], input[name=desplazamiento]').forEach(r => r.checked = false);
+  document.getElementById('desplazamiento-block').style.display = 'none';
+  document.getElementById('visita-guiada-block').style.display = 'none';
+  pvsoRequired = true;
+  setPvsoSectionsVisibility(true);
+  document.getElementById('file-name').style.display = 'none';
+  document.getElementById('zone-panel').style.display = 'none';
+  document.getElementById('zone-panel').innerHTML = '';
+  document.getElementById('tipo-note').style.display = 'none';
+  document.getElementById('horario-panel').style.display = 'none';
+  document.getElementById('fuera-horario').checked = false;
+  document.getElementById('horario-note').textContent = '';
+  document.getElementById('zona-texto').classList.add('auto-filled');
+  document.getElementById('zona-texto').readOnly = true;
+  if (firmaCtx) clearFirma();
+  selectedZone = null;
+  if (map) {
+    ZONES.forEach(z => { if (z._poly) z._poly.setStyle({weight:2}); });
+  }
+}
+
+document.querySelectorAll('input, select, textarea').forEach(el => {
+  el.addEventListener('input', () => {
+    el.classList.remove('error');
+    const err = document.getElementById('err-' + el.id);
+    if (err) err.classList.remove('visible');
+  });
+});
+document.querySelectorAll('input[name=naturaleza]').forEach(r => {
+  r.addEventListener('change', () => document.getElementById('err-naturaleza').classList.remove('visible'));
+});
+document.querySelectorAll('input[name=desplazamiento]').forEach(r => {
+  r.addEventListener('change', () => document.getElementById('err-desplazamiento').classList.remove('visible'));
+});
+document.getElementById('acepta-carta').addEventListener('change', () => {
+  document.getElementById('err-acepta-carta').classList.remove('visible');
+});
+
+initMap();
+</script>
+</body>
+</html>
