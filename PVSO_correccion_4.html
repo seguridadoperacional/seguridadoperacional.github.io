@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corrección de PVSO — Aeropuertos Andinos del Perú</title>
+<style>
+:root {
+  --aap-blue: #0D3B6E;
+  --aap-blue-mid: #185FA5;
+  --aap-blue-light: #E6F1FB;
+  --aap-gold: #C8960C;
+  --danger: #A32D2D;
+  --danger-bg: #FCEBEB;
+  --danger-border: #F09595;
+  --warning: #854F0B;
+  --warning-bg: #FAEEDA;
+  --warning-border: #EF9F27;
+  --success: #3B6D11;
+  --success-bg: #EAF3DE;
+  --success-border: #97C459;
+  --gray-50: #F7F6F3;
+  --gray-100: #EEECEA;
+  --gray-200: #D5D3CE;
+  --gray-400: #9A9690;
+  --gray-600: #5F5D58;
+  --gray-900: #1C1C1A;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); font-size: 15px; line-height: 1.6; }
+a { color: var(--aap-blue-mid); }
+.header { background: var(--aap-blue); }
+.header-inner { max-width: 720px; margin: 0 auto; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.header-logo { width: 44px; height: 44px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 700; color: var(--aap-blue); }
+.header-text h1 { color: white; font-size: 15px; font-weight: 600; }
+.header-text p { color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 1px; }
+.header-strip { background: var(--aap-gold); height: 3px; }
+.page { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); }
+.card h2 { font-size: 17px; font-weight: 600; color: var(--aap-blue); margin-bottom: 0.5rem; }
+.card p.sub { font-size: 13px; color: var(--gray-600); }
+.pvso-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; font-size: 12px; color: var(--gray-600); font-family: 'JetBrains Mono', monospace; }
+.pvso-meta span { background: var(--gray-50); border: 0.5px solid var(--gray-200); border-radius: 100px; padding: 3px 10px; }
+.item-card { background: white; border-radius: 12px; border: 0.5px solid var(--warning-border); padding: 1.5rem 1.75rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+.item-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+.item-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gray-400); font-weight: 600; }
+.item-name { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+.obs-box { background: var(--warning-bg); border: 0.5px solid var(--warning-border); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 13px; color: var(--warning); }
+.obs-box strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.field { margin-bottom: 0.85rem; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 4px; }
+.field input, .field textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--gray-900); background: white; }
+.field textarea { min-height: 70px; resize: vertical; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--aap-blue-mid); box-shadow: 0 0 0 3px var(--aap-blue-light); }
+.readonly-note { background: var(--gray-50); border: 0.5px dashed var(--gray-200); border-radius: var(--radius); padding: 0.65rem 0.85rem; font-size: 12px; color: var(--gray-600); }
+.eq-rows { margin-bottom: 0.5rem; }
+.eq-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.eq-row input.eq-tipo { flex: 3; }
+.eq-row input.eq-cant { flex: 1; }
+.eq-row button { flex-shrink: 0; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger); border-radius: var(--radius); width: 32px; height: 32px; cursor: pointer; font-size: 14px; }
+.btn-add-row { background: var(--aap-blue-light); border: 0.5px solid var(--aap-blue-mid); color: var(--aap-blue-mid); border-radius: var(--radius); padding: 0.4rem 0.8rem; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-submit { width: 100%; background: var(--aap-blue); color: white; border: none; border-radius: var(--radius); padding: 0.9rem; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 0.5rem; }
+.btn-submit:hover { background: var(--aap-blue-mid); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.status-msg { text-align: center; padding: 3rem 1.5rem; }
+.status-msg .icon { font-size: 40px; margin-bottom: 1rem; }
+.status-msg h2 { font-size: 18px; margin-bottom: 0.5rem; }
+.status-msg p { color: var(--gray-600); font-size: 14px; }
+.success-icon { color: var(--success); }
+.error-icon { color: var(--danger); }
+#loading { text-align: center; padding: 4rem 1.5rem; color: var(--gray-600); }
+.footer-note { text-align: center; font-size: 11px; color: var(--gray-400); margin-top: 2rem; }
+.sticky-reminder { position: sticky; top: 0; z-index: 50; background: var(--warning); color: white; text-align: center; font-size: 13px; font-weight: 600; padding: 0.6rem 1rem; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">AAP</div>
+    <div class="header-text">
+      <h1>Aeropuertos Andinos del Perú</h1>
+      <p>Corrección de observaciones — PVSO</p>
+    </div>
+  </div>
+</div>
+<div class="header-strip"></div>
+<div class="sticky-reminder" id="sticky-reminder">⚠ No olvides volver aquí y hacer clic en "Enviar corrección" al terminar de subir tu archivo</div>
+
+<div class="page" id="page-container">
+  <div id="loading">Cargando datos de tu solicitud...</div>
+  <div id="content" style="display:none"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLLrTb5zJ4wJGDdDwEpz3eWAsNAkCOR5pmxu7f5XZ0jNlkisuMPp8NK-0zfwgUGZuX/exec';
+
+// Debe mantenerse igual que ITEM_TO_COLS en el .gs
+const ITEM_TO_COLS = {
+  'Tipo de atención y período': ['tipo_atencion'],
+  'Objeto del proyecto': ['objeto'],
+  'Cronograma': ['cronograma'],
+  'Ubicación': ['zona'],
+  'Área de cercamiento': ['area_cercamiento'],
+  'Señalización': ['senalizacion'],
+  'Equipos y maquinaria': ['equipos_menores', 'equipos_mayores', 'equipo_altura', 'equipo_anchura'],
+  'Rutas establecidas': ['rutas'],
+  'Responsables': ['reso_tercero', 'reso_tercero_cel', 'reso_tercero_correo', 'reso_aap_nombre', 'reso_aap_area', 'reso_aap_cel', 'reso_aap_correo', 'num_personal'],
+};
+// Columnas técnicas que no se editan en texto libre (requieren contactar al SLA)
+const COLS_NO_EDITABLES = { ruta_puntos: true, ruta_cruza_critica: true };
+// Debe mantenerse igual que FIELD_MAP_FORM en el .gs
+const FIELD_MAP_FORM = {
+  'tipo_atencion': 'item1_tipo_atencion', 'objeto': 'item3_objeto', 'cronograma': 'item5_cronograma',
+  'area_cercamiento': 'item7_area_cercamiento', 'senalizacion': 'item8_senalizacion',
+  'equipos_menores': 'item9_equipos_menores', 'equipos_mayores': 'item9_equipos_mayores', 'equipo_altura': 'item9_equipo_altura', 'equipo_anchura': 'item9_equipo_anchura',
+  'rutas': 'item10_rutas', 'reso_tercero': 'item11_reso_tercero', 'reso_tercero_cel': 'item11_reso_tercero_celular',
+  'reso_tercero_correo': 'item11_reso_tercero_correo', 'reso_aap_nombre': 'item11_reso_aap_nombre',
+  'reso_aap_area': 'item11_reso_aap_area', 'reso_aap_cel': 'item11_reso_aap_celular', 'reso_aap_correo': 'item11_reso_aap_correo',
+  'zona': 'zona',
+};
+const COL_LABEL = {
+  tipo_atencion: 'Tipo de atención', objeto: 'Objeto del proyecto', cronograma: 'Cronograma de actividades',
+  zona: 'Ubicación / zona', area_cercamiento: 'Área de cercamiento', senalizacion: 'Señalización',
+  equipos_menores: 'Equipos menores', equipo_altura: 'Altura del equipo', equipo_anchura: 'Ancho del equipo',
+  equipos_mayores: 'Equipos mayores',
+  rutas: 'Descripción de rutas', reso_tercero: 'Responsable (tercero)', reso_tercero_cel: 'Celular del responsable',
+  reso_tercero_correo: 'Correo del responsable', reso_aap_nombre: 'RESO-AAP asignado', reso_aap_area: 'Área RESO-AAP',
+  reso_aap_cel: 'Celular RESO-AAP', reso_aap_correo: 'Correo RESO-AAP', num_personal: 'Número de personal',
+};
+
+// Ítems que llevan un documento adjunto asociado (mismo criterio que el panel)
+const ITEM_CON_ADJUNTO = {
+  'Cronograma': true,
+  'Área de cercamiento': true,
+  'Equipos y maquinaria': true,
+  'Responsables': true,
+};
+const ADJUNTOS_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSdRWiobrMigkhFMm49R2APoEcDVjZiSxH4mbWJX48VlCOb2dg/viewform?entry.1926123575=';
+
+let pvsoActual = null;
+
+function marcarAdjuntoVisitado(itemName) {
+  const sticky = document.getElementById('sticky-reminder');
+  if (sticky) sticky.style.display = 'block';
+  const key = 'adj-confirmado-' + itemName.replace(/[^a-zA-Z0-9]/g, '');
+  const el = document.getElementById(key);
+  if (el) el.style.display = 'block';
+}
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function init() {
+  const id = getParam('corregir');
+  const cont = document.getElementById('content');
+  const loading = document.getElementById('loading');
+
+  if (!id) {
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+    cont.innerHTML = renderError('Enlace incompleto', 'Este enlace no incluye el código del PVSO a corregir. Solicita al SLA que te reenvíe el correo de observaciones.');
+    return;
+  }
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=obtener&id=' + encodeURIComponent(id));
+    const json = await resp.json();
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+
+    if (!json.ok || !json.data) {
+      cont.innerHTML = renderError('PVSO no encontrado', `El código <strong>${id}</strong> no existe en el sistema. Verifica el enlace o contacta al SLA.`);
+      return;
+    }
+
+    pvsoActual = json.data;
+    let itemsEstado = pvsoActual.items_estado;
+    if (typeof itemsEstado === 'string') { try { itemsEstado = JSON.parse(itemsEstado); } catch(e) { itemsEstado = {}; } }
+    let itemsObs = pvsoActual.items_obs;
+    if (typeof itemsObs === 'string') { try { itemsObs = JSON.parse(itemsObs); } catch(e) { itemsObs = {}; } }
+    pvsoActual.items_estado = itemsEstado || {};
+    pvsoActual.items_obs = itemsObs || {};
+
+    const observados = Object.entries(pvsoActual.items_estado).filter(([, st]) => st === 'obs');
+
+    if (!observados.length) {
+      cont.innerHTML = renderHeaderCard() + renderError('Sin observaciones pendientes', 'Esta solicitud no tiene ítems observados en este momento, o ya fueron corregidos. No es necesario hacer nada más aquí.');
+      return;
+    }
+
+    cont.innerHTML = renderHeaderCard() + observados.map(([name]) => renderItemCard(name)).join('') +
+      `<button class="btn-submit" id="btn-enviar" onclick="enviarCorreccion()">Enviar corrección</button>
+       <p class="footer-note">Solo se actualizarán los ítems observados. El resto de tu solicitud permanece sin cambios.</p>`;
+
+  } catch (e) {
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+    cont.innerHTML = renderError('No se pudo cargar la solicitud', 'Ocurrió un problema de conexión. Verifica tu internet e intenta recargar la página.');
+  }
+}
+
+function renderHeaderCard() {
+  const p = pvsoActual;
+  return `<div class="card">
+    <h2>${p.empresa || 'Solicitud PVSO'}</h2>
+    <p class="sub">Corrige únicamente los ítems que el Supervisor de Lado Aire (SLA) observó abajo.</p>
+    <div class="pvso-meta">
+      <span>${p.id}</span>
+      <span>${p.sede || ''}</span>
+      <span>${p.contacto || ''}</span>
+    </div>
+  </div>`;
+}
+
+function renderItemCard(itemName) {
+  const cols = ITEM_TO_COLS[itemName] || [];
+  const obs = pvsoActual.items_obs[itemName] || '';
+  const editableCols = cols.filter(c => !COLS_NO_EDITABLES[c] && c !== 'equipos_mayores');
+  const lockedCols = cols.filter(c => COLS_NO_EDITABLES[c]);
+  const tieneEquiposMayores = cols.includes('equipos_mayores');
+
+  const fieldsHtml = editableCols.map(col => {
+    const val = pvsoActual[col] != null ? pvsoActual[col] : '';
+    const isLong = ['objeto', 'cronograma', 'area_cercamiento', 'senalizacion', 'rutas', 'zona'].includes(col);
+    return `<div class="field">
+      <label>${COL_LABEL[col] || col}</label>
+      ${isLong
+        ? `<textarea data-col="${col}" id="f-${col}">${escapeHtml(val)}</textarea>`
+        : `<input type="text" data-col="${col}" id="f-${col}" value="${escapeHtml(val)}"/>`}
+    </div>`;
+  }).join('');
+
+  const equiposMayoresHtml = tieneEquiposMayores ? renderEquiposMayores() : '';
+
+  const adjuntoHtml = ITEM_CON_ADJUNTO[itemName]
+    ? `<div class="field">
+        <label>Documento adjunto</label>
+        <a href="${ADJUNTOS_FORM_URL}${encodeURIComponent(pvsoActual.id)}" target="_blank" onclick="marcarAdjuntoVisitado('${itemName}')" style="display:inline-block;font-size:12px;font-weight:600;color:var(--aap-blue-mid);background:var(--aap-blue-light);border:0.5px solid var(--aap-blue-mid);border-radius:var(--radius);padding:0.5rem 0.9rem;text-decoration:none">📎 Subir documento corregido de este ítem →</a>
+        <div class="adjunto-warning" style="margin-top:8px;font-size:11px;color:var(--warning);background:var(--warning-bg);border:0.5px solid var(--warning-border);border-radius:var(--radius);padding:0.5rem 0.75rem;line-height:1.5">
+          ⚠ <strong>Esto se abre en una pestaña nueva.</strong> Sube tu archivo ahí, y luego <strong>regresa a esta pestaña</strong> — no cierres esta página. Debes hacer clic en <strong>"Enviar corrección"</strong> al final para que tu envío quede registrado. Subir el archivo por sí solo no completa el proceso.
+        </div>
+        <div id="adj-confirmado-${itemName.replace(/[^a-zA-Z0-9]/g,'')}" style="display:none;margin-top:6px;font-size:11px;color:var(--success);font-weight:600">✓ Recuerda volver aquí y enviar la corrección al terminar</div>
+      </div>`
+    : '';
+
+  const lockedHtml = lockedCols.length
+    ? `<div class="readonly-note">Este ítem incluye datos técnicos del mapa de rutas que no se pueden editar desde aquí. Si necesitas corregir el trazado de la ruta, contacta directamente al SLA de tu sede.</div>`
+    : '';
+
+  return `<div class="item-card">
+    <div class="item-hdr">
+      <span class="item-name">${itemName}</span>
+    </div>
+    ${obs ? `<div class="obs-box"><strong>Observación del SLA</strong>${escapeHtml(obs)}</div>` : ''}
+    ${fieldsHtml}
+    ${equiposMayoresHtml}
+    ${adjuntoHtml}
+    ${lockedHtml}
+  </div>`;
+}
+
+function renderEquiposMayores() {
+  let lista = [];
+  try {
+    const raw = pvsoActual.equipos_mayores;
+    lista = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+  } catch(e) { lista = []; }
+  if (!lista.length) lista = [{ tipo: '', cant: 1 }];
+
+  const rowsHtml = lista.map(item => renderEquipoRow(item.tipo || '', item.cant != null ? item.cant : 1)).join('');
+  return `<div class="field">
+    <label>Equipos mayores (tipo y cantidad)</label>
+    <div class="eq-rows" id="eq-mayores-rows">${rowsHtml}</div>
+    <button type="button" class="btn-add-row" onclick="addEquipoRow()">+ Agregar equipo</button>
+  </div>`;
+}
+
+function renderEquipoRow(tipo, cant) {
+  return `<div class="eq-row">
+    <input type="text" class="eq-tipo" placeholder="Tipo de equipo (ej. Grúa telescópica)" value="${escapeHtml(tipo)}"/>
+    <input type="number" class="eq-cant" placeholder="Cant." min="1" value="${escapeHtml(cant)}"/>
+    <button type="button" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+function addEquipoRow() {
+  const cont = document.getElementById('eq-mayores-rows');
+  if (!cont) return;
+  cont.insertAdjacentHTML('beforeend', renderEquipoRow('', 1));
+}
+
+function renderError(title, msg) {
+  return `<div class="status-msg">
+    <div class="icon error-icon">⚠</div>
+    <h2>${title}</h2>
+    <p>${msg}</p>
+  </div>`;
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function enviarCorreccion() {
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const payload = { modo: 'correccion', pvso_id_corregir: pvsoActual.id };
+  document.querySelectorAll('[data-col]').forEach(el => {
+    const col = el.getAttribute('data-col');
+    const formKey = FIELD_MAP_FORM[col] || col;
+    payload[formKey] = el.value;
+  });
+
+  const eqRows = document.getElementById('eq-mayores-rows');
+  if (eqRows) {
+    const equipos = [];
+    eqRows.querySelectorAll('.eq-row').forEach(row => {
+      const tipo = row.querySelector('.eq-tipo')?.value.trim() || '';
+      const cant = parseInt(row.querySelector('.eq-cant')?.value, 10) || 1;
+      if (tipo) equipos.push({ tipo, cant });
+    });
+    payload[FIELD_MAP_FORM['equipos_mayores'] || 'equipos_mayores'] = JSON.stringify(equipos);
+  }
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const stickyDone = document.getElementById('sticky-reminder');
+    if (stickyDone) stickyDone.style.display = 'none';
+    document.getElementById('content').innerHTML = `<div class="status-msg">
+      <div class="icon success-icon">✓</div>
+      <h2>Corrección enviada</h2>
+      <p>El SLA de Aeropuertos Andinos del Perú revisará los cambios y te notificará por correo. N° de referencia: <strong>${pvsoActual.id}</strong></p>
+    </div>`;
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Enviar corrección';
+    alert('No se pudo enviar la corrección. Verifica tu conexión e intenta nuevamente.');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
