@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Panel PVSO — Aeropuertos Andinos del Perú</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --blue:#0D3B6E;--blue-mid:#185FA5;--blue-light:#E6F1FB;
+  --gold:#C8960C;--gold-light:#FDF6E3;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-border:#F09595;
+  --amber:#854F0B;--amber-bg:#FDF3E3;--amber-border:#EF9F27;
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-border:#97C459;
+  --purple:#6B2FA0;--purple-bg:#F0E6FB;--purple-border:#C99AE8;
+  --teal:#0A6E9E;--teal-bg:#E6F4FB;--teal-border:#7AC5E8;
+  --g50:#F7F6F3;--g100:#EEECEA;--g200:#D5D3CE;--g400:#9A9690;--g600:#5F5D58;--g900:#1C1C1A;
+  --r:8px;--sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);--sh-md:0 4px 12px rgba(0,0,0,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--g50);color:var(--g900);font-size:14px;line-height:1.6;}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--blue);}
+.login-card{background:white;border-radius:16px;padding:2.5rem;width:100%;max-width:380px;box-shadow:var(--sh-md);}
+.login-logo{text-align:center;margin-bottom:1.75rem;}
+.login-logo h1{font-size:15px;font-weight:600;color:var(--blue);margin-top:10px;}
+.login-logo p{font-size:12px;color:var(--g400);margin-top:2px;}
+.lf{margin-bottom:1rem;}
+.lf label{display:block;font-size:12px;font-weight:500;color:var(--g600);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.lf select,.lf input{width:100%;padding:.6rem .75rem;border:.5px solid var(--g200);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--g900);background:white;outline:none;}
+.lf select:focus,.lf input:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+.btn-login{width:100%;background:var(--blue);color:white;border:none;border-radius:var(--r);padding:.75rem;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:.5rem;}
+.btn-login:hover{background:#0A2E58;}
+.login-note{font-size:11px;color:var(--g400);text-align:center;margin-top:1rem;}
+
+/* HEADER */
+.header{background:var(--blue);}
+.hdr-inner{max-width:1200px;margin:0 auto;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.hdr-left{display:flex;align-items:center;gap:12px;}
+.hdr-logo{width:32px;height:32px;background:white;border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.hdr-title{color:white;font-size:14px;font-weight:600;}
+.hdr-sub{color:rgba(255,255,255,.55);font-size:12px;}
+.role-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;letter-spacing:.04em;}
+.role-sla{background:rgba(200,150,12,.25);color:var(--gold);border:.5px solid rgba(200,150,12,.4);}
+.role-gestor{background:rgba(59,109,17,.25);color:#7DC44A;border:.5px solid rgba(59,109,17,.4);}
+.role-gerencia{background:rgba(107,47,160,.25);color:#C99AE8;border:.5px solid rgba(107,47,160,.4);}
+.btn-logout{font-size:12px;color:rgba(255,255,255,.55);background:none;border:none;cursor:pointer;padding:4px 8px;}
+.btn-logout:hover{color:white;}
+.hdr-strip{background:var(--gold);height:3px;}
+
+/* APP */
+#app-screen{display:none;}
+.app{max-width:1200px;margin:0 auto;padding:1.5rem;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--g100);border-radius:var(--r);padding:4px;width:fit-content;}
+.tab{font-size:13px;font-weight:500;padding:6px 18px;border-radius:6px;border:none;background:none;cursor:pointer;color:var(--g600);font-family:inherit;transition:all .15s;}
+.tab.active{background:white;color:var(--blue);box-shadow:var(--sh);}
+
+/* STAT CARDS — clickeables */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem;}
+.stat-card{background:white;border-radius:var(--r);border:.5px solid var(--g200);padding:.9rem 1rem;box-shadow:var(--sh);cursor:pointer;transition:all .15s;user-select:none;}
+.stat-card:hover{box-shadow:var(--sh-md);transform:translateY(-1px);}
+.stat-card.active-filter{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(24,95,165,.15);}
+.stat-label{font-size:11px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.stat-val{font-size:24px;font-weight:700;}
+.stat-hint{font-size:10px;color:var(--g400);margin-top:2px;}
+.c-amber{color:var(--amber);} .c-red{color:var(--red);} .c-blue{color:var(--blue-mid);} .c-green{color:var(--green);} .c-gray{color:var(--g600);}
+
+/* FILTERS */
+.filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+.search-box{flex:1;min-width:200px;font-size:13px;font-family:inherit;padding:6px 10px;border:.5px solid var(--g200);border-radius:var(--r);background:white;color:var(--g900);outline:none;}
+.search-box:focus{border-color:var(--blue-mid);}
+.filter-sel{font-size:12px;font-family:inherit;padding:5px 10px;border:.5px solid var(--g200);border-radius:var(--r);background:white;color:var(--g900);cursor:pointer;outline:none;}
+.clear-filter-btn{font-size:12px;font-family:inherit;padding:5px 12px;border:.5px solid var(--g200);border-radius:var(--r);background:white;color:var(--g600);cursor:pointer;}
+.clear-filter-btn:hover{background:var(--g100);}
+#active-filter-label{font-size:12px;color:var(--blue-mid);font-weight:500;display:none;align-items:center;gap:6px;}
+
+/* LIST */
+.pvso-list{display:flex;flex-direction:column;gap:8px;}
+.pvso-card{background:white;border-radius:var(--r);border:.5px solid var(--g200);box-shadow:var(--sh);overflow:hidden;cursor:pointer;transition:box-shadow .15s;}
+.pvso-card:hover{box-shadow:var(--sh-md);}
+.pvso-card-hdr{display:flex;align-items:center;gap:12px;padding:1rem 1.25rem;}
+.pvso-indicator{width:4px;height:40px;border-radius:2px;flex-shrink:0;}
+.pvso-info{flex:1;}
+.pvso-empresa{font-size:14px;font-weight:600;color:var(--g900);}
+.pvso-meta{font-size:12px;color:var(--g400);margin-top:2px;}
+.pvso-badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.badge-sm{font-size:11px;font-weight:500;padding:2px 8px;border-radius:100px;}
+.b-ama{background:var(--red-bg);color:var(--red);border:.5px solid var(--red-border);}
+.b-ame{background:var(--green-bg);color:var(--green);border:.5px solid var(--green-border);}
+.b-visita{background:var(--blue-light);color:var(--blue-mid);border:.5px solid #B5D4F4;}
+.pvso-estado{font-size:11px;font-weight:600;padding:3px 10px;border-radius:100px;white-space:nowrap;}
+.e-pending{background:var(--amber-bg);color:var(--amber);border:.5px solid var(--amber-border);}
+.e-obs{background:var(--red-bg);color:var(--red);border:.5px solid var(--red-border);}
+.e-plain-bold{background:none;border:none;color:var(--g900);font-weight:700;text-transform:uppercase;padding:3px 0;letter-spacing:.02em;}
+.e-sla{background:var(--blue-light);color:var(--blue-mid);border:.5px solid #B5D4F4;}
+.e-matriz{background:var(--purple-bg);color:var(--purple);border:.5px solid var(--purple-border);}
+.e-dgac{background:var(--amber-bg);color:var(--amber);border:.5px solid var(--amber-border);}
+.e-notam{background:var(--teal-bg);color:var(--teal);border:.5px solid var(--teal-border);}
+.e-validado{background:var(--green-bg);color:var(--green);border:.5px solid var(--green-border);}
+.pvso-arrow{color:var(--g400);font-size:16px;}
+
+/* DETAIL */
+#detail-panel{display:none;}
+.detail-back{font-size:13px;color:var(--blue-mid);background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500;margin-bottom:1rem;padding:0;display:flex;align-items:center;gap:4px;}
+.detail-back:hover{text-decoration:underline;}
+.section-card{background:white;border-radius:12px;border:.5px solid var(--g200);padding:1.5rem;margin-bottom:1rem;box-shadow:var(--sh);}
+.section-title{font-size:13px;font-weight:600;color:var(--blue-mid);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:.5px solid var(--g100);display:flex;align-items:center;gap:8px;}
+.section-title::before{content:'';width:3px;height:16px;background:var(--gold);border-radius:2px;flex-shrink:0;}
+.detail-empresa{font-size:20px;font-weight:700;color:var(--g900);}
+.detail-sub{font-size:13px;color:var(--g400);margin-top:3px;}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:1.25rem;}
+.meta-item{background:var(--g50);border-radius:var(--r);padding:.65rem .85rem;border:.5px solid var(--g100);}
+.meta-label{font-size:11px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px;}
+.meta-val{font-size:13px;font-weight:500;color:var(--g900);}
+
+/* FLUJO */
+.flujo-bar{display:flex;align-items:center;gap:0;overflow-x:auto;padding:.5rem 0;}
+.flujo-step{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:90px;}
+.flujo-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.f-done{background:var(--green);color:white;}
+.f-curr{background:var(--blue);color:white;box-shadow:0 0 0 3px rgba(24,95,165,.2);}
+.f-pend{background:var(--g100);color:var(--g400);border:.5px solid var(--g200);}
+.flujo-label{font-size:10px;color:var(--g600);text-align:center;line-height:1.3;font-weight:500;}
+.flujo-line{height:2px;flex:1;min-width:20px;}
+.fl-done{background:var(--green);} .fl-pend{background:var(--g200);}
+
+/* ITEMS */
+.item-row{border:.5px solid var(--g200);border-radius:var(--r);margin-bottom:8px;overflow:hidden;}
+.item-row-hdr{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer;background:var(--g50);}
+.item-row-hdr:hover{background:var(--g100);}
+.item-num{font-size:11px;font-weight:700;color:var(--g400);font-family:'JetBrains Mono',monospace;min-width:28px;}
+.item-name{flex:1;font-size:13px;font-weight:500;color:var(--g900);}
+.item-dot{width:8px;height:8px;border-radius:50%;}
+.id-ok{background:var(--green);} .id-obs{background:var(--red);} .id-pend{background:var(--g200);} .id-corregido{background:var(--blue-mid);}
+.item-body{padding:1rem;border-top:.5px solid var(--g100);display:none;}
+.item-body.open{display:block;}
+.item-val{font-size:13px;color:var(--g600);line-height:1.6;background:var(--g50);border-radius:var(--r);padding:.75rem;margin-bottom:.75rem;border:.5px solid var(--g100);white-space:pre-wrap;}
+.item-acts{display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;}
+.obs-inp{flex:1;min-width:160px;font-size:13px;font-family:inherit;padding:6px 10px;border:.5px solid var(--g200);border-radius:var(--r);outline:none;}
+.obs-inp:focus{border-color:var(--red);}
+.btn-ok{font-size:12px;font-family:inherit;padding:6px 14px;border-radius:var(--r);border:.5px solid var(--green-border);background:var(--green-bg);color:var(--green);cursor:pointer;font-weight:500;}
+.btn-obs{font-size:12px;font-family:inherit;padding:6px 14px;border-radius:var(--r);border:.5px solid var(--red-border);background:var(--red-bg);color:var(--red);cursor:pointer;font-weight:500;}
+.item-obs-txt{font-size:12px;color:var(--red);background:var(--red-bg);border:.5px solid var(--red-border);border-radius:var(--r);padding:6px 10px;margin-top:8px;}
+.item-ok-txt{font-size:12px;color:var(--green);background:var(--green-bg);border:.5px solid var(--green-border);border-radius:var(--r);padding:6px 10px;margin-top:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.btn-reabrir{font-size:11px;color:var(--g600);background:transparent;border:.5px solid var(--g200);border-radius:var(--r);padding:3px 8px;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.btn-reabrir:hover{background:var(--g50,#f7f7f5);color:var(--g900);}
+
+/* ACTIONS */
+.act-field{margin-bottom:.75rem;}
+.act-field label{display:block;font-size:12px;font-weight:500;color:var(--g600);margin-bottom:4px;}
+.act-field input,.act-field textarea,.act-field select{width:100%;padding:.55rem .75rem;border:.5px solid var(--g200);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--g900);background:white;outline:none;}
+.act-field input:focus,.act-field textarea:focus{border-color:var(--blue-mid);box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+.act-field textarea{resize:vertical;min-height:70px;}
+.btn-p{font-size:13px;font-family:inherit;font-weight:600;padding:8px 20px;border-radius:var(--r);border:none;background:var(--blue);color:white;cursor:pointer;}
+.btn-p:hover{background:#0A2E58;}
+.btn-s{font-size:13px;font-family:inherit;font-weight:600;padding:8px 20px;border-radius:var(--r);border:none;background:var(--green);color:white;cursor:pointer;}
+.btn-s:hover{background:#2D5A0D;}
+.btn-d{font-size:13px;font-family:inherit;font-weight:600;padding:8px 20px;border-radius:var(--r);border:none;background:var(--red);color:white;cursor:pointer;}
+.file-up{border:1.5px dashed var(--g200);border-radius:var(--r);padding:1rem;text-align:center;cursor:pointer;background:var(--g50);}
+.file-up:hover{border-color:var(--blue-mid);background:var(--blue-light);}
+.file-up input{display:none;}
+.doc-preview{background:var(--g50);border:.5px solid var(--g200);border-radius:var(--r);padding:1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.doc-icon{width:40px;height:40px;background:var(--red-bg);border-radius:var(--r);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.doc-info{flex:1;}
+.doc-name{font-size:13px;font-weight:500;color:var(--g900);}
+.doc-sub{font-size:12px;color:var(--g400);margin-top:2px;}
+.btn-dl{font-size:12px;font-family:inherit;padding:5px 12px;border-radius:var(--r);border:.5px solid var(--blue-mid);color:var(--blue-mid);background:white;cursor:pointer;font-weight:500;}
+.empty{text-align:center;padding:3rem 1rem;color:var(--g400);}
+
+/* NOTIF */
+.notif{position:fixed;top:1rem;right:1rem;background:var(--g900);color:white;padding:.75rem 1.25rem;border-radius:var(--r);font-size:13px;z-index:1000;display:none;box-shadow:var(--sh-md);}
+
+/* ─── DASHBOARD ──────────────────────────────────────────────────────── */
+#tab-dashboard-content{display:none;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.dash-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;}
+.dash-card{background:white;border-radius:12px;border:.5px solid var(--g200);padding:1.25rem;box-shadow:var(--sh);}
+.dash-card h3{font-size:12px;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:1rem;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1rem;}
+.kpi{background:white;border-radius:var(--r);border:.5px solid var(--g200);padding:1rem;box-shadow:var(--sh);text-align:center;}
+.kpi-val{font-size:32px;font-weight:700;color:var(--g900);}
+.kpi-label{font-size:11px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-top:4px;}
+.sede-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--g100);}
+.sede-name{font-size:13px;font-weight:500;color:var(--g900);min-width:50px;}
+.sede-bar-wrap{flex:1;height:8px;background:var(--g100);border-radius:4px;overflow:hidden;}
+.sede-bar{height:100%;border-radius:4px;background:var(--blue-mid);}
+.sede-count{font-size:12px;color:var(--g600);min-width:30px;text-align:right;}
+.timeline-item{display:flex;gap:10px;padding:8px 0;border-bottom:.5px solid var(--g100);font-size:12px;}
+.tl-fecha{color:var(--g400);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.tl-empresa{flex:1;color:var(--g900);font-weight:500;}
+.tl-sede{color:var(--g400);}
+.filter-sede-select{font-size:12px;font-family:inherit;padding:4px 8px;border:.5px solid var(--g200);border-radius:var(--r);background:white;color:var(--g900);cursor:pointer;outline:none;margin-left:auto;}
+
+@media(max-width:700px){
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .meta-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid,.dash-grid-3,.kpi-row{grid-template-columns:1fr;}
+}
+
+/* ─── BITÁCORA ──────────────────────────────────────────────────── */
+.bita-week-strip{display:flex;gap:4px;margin-bottom:1rem;overflow-x:auto;padding-bottom:4px;}
+.bita-week-day{flex:1;min-width:70px;text-align:center;padding:8px 4px;border-radius:var(--r);border:.5px solid var(--g200);background:white;cursor:pointer;transition:all .15s;}
+.bita-week-day:hover{background:var(--g50);}
+.bita-week-day.active{background:var(--blue);border-color:var(--blue);}
+.bita-week-day.active .bwd-name,.bita-week-day.active .bwd-num,.bita-week-day.active .bwd-count{color:white!important;}
+.bita-week-day.has-items{border-color:var(--blue-mid);}
+.bita-week-day.today-wk{border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,150,12,.2);}
+.bwd-name{font-size:10px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;display:block;}
+.bwd-num{font-size:20px;font-weight:700;color:var(--g900);display:block;margin:2px 0;}
+.bwd-dot{width:6px;height:6px;border-radius:50%;background:var(--blue-mid);margin:0 auto;opacity:0;}
+.bwd-count{font-size:10px;color:var(--blue-mid);display:block;min-height:14px;}
+.has-items .bwd-dot{opacity:1;}
+.bita-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem;}
+.bita-kpi{background:white;border-radius:var(--r);border:.5px solid var(--g200);padding:.75rem 1rem;box-shadow:var(--sh);}
+.bita-kpi-val{font-size:22px;font-weight:700;color:var(--g900);}
+.bita-kpi-label{font-size:11px;color:var(--g400);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+.bita-list{display:flex;flex-direction:column;gap:6px;}
+.bita-item{background:white;border-radius:var(--r);border:.5px solid var(--g200);box-shadow:var(--sh);overflow:hidden;display:flex;align-items:stretch;transition:box-shadow .15s;}
+.bita-item:hover{box-shadow:var(--sh-md);}
+.bita-indicator{width:4px;align-self:stretch;flex-shrink:0;}
+.bita-time-col{background:var(--g50);border-right:.5px solid var(--g100);padding:.85rem 1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px;gap:2px;}
+.bita-time-in{font-size:15px;font-weight:700;color:var(--g900);font-family:'JetBrains Mono',monospace;}
+.bita-time-out{font-size:11px;color:var(--g400);font-family:'JetBrains Mono',monospace;}
+.bita-time-arrow{font-size:10px;color:var(--g400);}
+.bita-main{flex:1;padding:.85rem 1.25rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.bita-empresa{font-size:14px;font-weight:600;color:var(--g900);}
+.bita-zona{font-size:12px;color:var(--g600);margin-top:2px;}
+.bita-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.bita-personas{font-size:12px;color:var(--g600);display:flex;align-items:center;gap:4px;}
+.bita-empty{text-align:center;padding:3rem 1rem;color:var(--g400);}
+.bita-empty-icon{font-size:40px;margin-bottom:.75rem;}
+
+.bita-view-toggle{display:flex;gap:4px;background:var(--g100);border-radius:var(--r);padding:3px;}
+.bita-view-btn{font-size:12px;font-family:inherit;padding:4px 14px;border-radius:6px;border:none;background:none;cursor:pointer;color:var(--g600);font-weight:500;}
+.bita-view-btn.active{background:white;color:var(--blue);box-shadow:var(--sh);}
+.bita-nav-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
+.bita-nav-center{display:flex;align-items:center;gap:10px;}
+.bita-nav-arrow{font-size:16px;background:white;border:.5px solid var(--g200);border-radius:var(--r);padding:5px 12px;cursor:pointer;color:var(--g600);font-family:inherit;line-height:1;}
+.bita-nav-arrow:hover{background:var(--g50);}
+.bita-period-label{font-size:14px;font-weight:600;color:var(--g900);min-width:160px;text-align:center;}
+/* Calendario mensual */
+.bita-cal{background:white;border-radius:12px;border:.5px solid var(--g200);overflow:hidden;box-shadow:var(--sh);margin-bottom:1rem;}
+.bita-cal-header{display:grid;grid-template-columns:repeat(7,1fr);background:var(--blue);padding:8px 0;}
+.bita-cal-dayname{text-align:center;font-size:11px;font-weight:600;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;}
+.bita-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;}
+.bita-cal-cell{min-height:70px;border-right:.5px solid var(--g100);border-bottom:.5px solid var(--g100);padding:6px;cursor:pointer;transition:background .1s;position:relative;}
+.bita-cal-cell:hover{background:var(--g50);}
+.bita-cal-cell.empty{background:var(--g50);cursor:default;}
+.bita-cal-cell.today{background:var(--blue-light);}
+.bita-cal-cell.selected{background:rgba(24,95,165,.08);outline:2px solid var(--blue-mid);}
+.bita-cal-num{font-size:13px;font-weight:600;color:var(--g600);}
+.bita-cal-cell.today .bita-cal-num{color:var(--blue);font-weight:700;}
+.bita-cal-entries{display:flex;flex-direction:column;gap:2px;margin-top:4px;}
+.bita-cal-entry{font-size:10px;padding:1px 5px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.bita-cal-entry.ama{background:var(--red-bg);color:var(--red);}
+.bita-cal-entry.ame{background:var(--green-bg);color:var(--green);}
+.bita-cal-more{font-size:10px;color:var(--g400);padding-left:2px;}
+/* Total mensual */
+.bita-month-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:1rem;}
+
+/* ─── MATRIZ IA ─────────────────────────────────────────────────── */
+.matriz-ia-card{background:linear-gradient(135deg,#0D3B6E 0%,#185FA5 100%);border-radius:12px;padding:1.5rem;margin-bottom:1rem;color:white;box-shadow:var(--sh-md);}
+.matriz-ia-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.matriz-ia-sub{font-size:12px;opacity:.75;margin-bottom:1.25rem;line-height:1.5;}
+.btn-gen-matriz{background:var(--gold);color:#1C1C1A;border:none;border-radius:var(--r);padding:10px 20px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;}
+.btn-gen-matriz:hover{background:#B8850B;}
+.btn-gen-matriz:disabled{opacity:.6;cursor:not-allowed;}
+.matriz-loading{display:none;font-size:13px;opacity:.8;margin-top:1rem;align-items:center;gap:8px;}
+.spin{animation:spin 1s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.matriz-resultado{background:white;border-radius:var(--r);padding:1.25rem;margin-top:1rem;display:none;}
+.matriz-resultado h4{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:.5px solid var(--g100);}
+.riesgo-row{display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:8px;padding:8px 0;border-bottom:.5px solid var(--g100);font-size:12px;align-items:start;}
+.mat-edit-txt{width:100%;font-family:inherit;font-size:12px;color:var(--g900);border:1px solid var(--g200);border-radius:var(--r);padding:5px 7px;resize:vertical;background:white;}
+.mat-edit-txt:focus{outline:none;border-color:var(--blue-mid);box-shadow:0 0 0 2px rgba(24,95,165,.12);}
+.mat-edit-sel{width:100%;font-family:inherit;font-size:12px;font-weight:600;border:1px solid var(--g200);border-radius:var(--r);padding:5px 7px;background:white;cursor:pointer;}
+.btn-elim-fila{margin-top:4px;font-size:10px;color:var(--red);background:var(--red-bg);border:.5px solid var(--red-border);border-radius:var(--r);padding:3px 7px;cursor:pointer;font-family:inherit;width:100%;}
+.riesgo-header{font-weight:600;color:var(--g600);font-size:11px;text-transform:uppercase;letter-spacing:.04em;}
+.nivel-badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;}
+.nivel-alto{background:#FCEBEB;color:#A32D2D;}
+.nivel-medio{background:#FDF3E3;color:#854F0B;}
+.nivel-bajo{background:#EAF3DE;color:#3B6D11;}
+.btn-aprobar-matriz{background:var(--green);color:white;border:none;border-radius:var(--r);padding:8px 18px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-top:1rem;}
+.btn-regenerar{background:var(--g100);color:var(--g600);border:.5px solid var(--g200);border-radius:var(--r);padding:8px 14px;font-size:12px;font-family:inherit;cursor:pointer;margin-top:1rem;margin-left:8px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 40 40" fill="none" width="48" height="48">
+        <path d="M20 4L36 32H4L20 4Z" fill="#0D3B6E"/>
+        <path d="M20 10L32 30H8L20 10Z" fill="#185FA5"/>
+        <path d="M20 16L28 28H12L20 16Z" fill="#C8960C"/>
+      </svg>
+      <h1>Panel de Gestión PVSO</h1>
+      <p>Aeropuertos Andinos del Perú — SMS</p>
+    </div>
+    <div class="lf">
+      <label>Rol</label>
+      <select id="login-rol">
+        <option value="">Selecciona tu rol</option>
+        <option value="sla">Supervisor de Lado Aire (SLA)</option>
+        <option value="gestor">Jefe SMS / Gestor de Seguridad Operacional</option>
+        <option value="asistente">Asistente SMS</option>
+        <option value="gerencia">Gerencia / Visualización</option>
+      </select>
+    </div>
+    <div class="lf">
+      <label>Nombre</label>
+      <input type="text" id="login-nombre" placeholder="Tu nombre completo"/>
+    </div>
+    <div class="lf" id="sede-field">
+      <label>Sede</label>
+      <select id="login-sede">
+        <option value="AQP">Arequipa (AQP)</option>
+        <option value="AYP">Ayacucho (AYP)</option>
+        <option value="JUL">Juliaca (JUL)</option>
+        <option value="PEM">Puerto Maldonado (PEM)</option>
+        <option value="TCQ">Tacna (TCQ)</option>
+      </select>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Ingresar</button>
+    <p class="login-note">Uso exclusivo para personal autorizado de AAP</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="header">
+    <div class="hdr-inner">
+      <div class="hdr-left">
+        <div class="hdr-logo">
+          <svg viewBox="0 0 40 40" fill="none" width="20" height="20">
+            <path d="M20 4L36 32H4L20 4Z" fill="#0D3B6E"/>
+            <path d="M20 10L32 30H8L20 10Z" fill="#185FA5"/>
+            <path d="M20 16L28 28H12L20 16Z" fill="#C8960C"/>
+          </svg>
+        </div>
+        <div>
+          <div class="hdr-title">Panel PVSO — AAP</div>
+          <div class="hdr-sub" id="hdr-sub">—</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="role-badge" id="role-badge"></span>
+        <button class="btn-logout" onclick="doLogout()">Salir</button>
+      </div>
+    </div>
+    <div class="hdr-strip"></div>
+  </div>
+
+  <div class="app">
+    <div class="tabs" id="tabs-row">
+      <button class="tab active" onclick="showTab('solicitudes')" id="tab-solicitudes">Solicitudes PVSO</button>
+      <button class="tab" onclick="showTab('dashboard')" id="tab-dashboard">Dashboard</button>
+      <button class="tab" onclick="showTab('bitacora')" id="tab-bitacora">Bitácora del día</button>
+      <button class="tab" onclick="showTab('matriz')" id="tab-matriz" style="display:none">Mi cola — Matriz</button>
+    </div>
+
+    <!-- ═══ TAB SOLICITUDES ═══════════════════════════════════════ -->
+    <div id="tab-solicitudes-content">
+      <div class="stats" id="stats-row">
+        <div class="stat-card" onclick="filterByCard('PENDIENTE_REVISION_SLA')" id="card-pendiente">
+          <div class="stat-label">Pendientes revisión</div>
+          <div class="stat-val c-amber" id="sv-pendiente">0</div>
+          <div class="stat-hint">Haz clic para filtrar</div>
+        </div>
+        <div class="stat-card" onclick="filterByCard('CON_OBSERVACIONES')" id="card-obs">
+          <div class="stat-label">Con observaciones</div>
+          <div class="stat-val c-red" id="sv-obs">0</div>
+          <div class="stat-hint">Haz clic para filtrar</div>
+        </div>
+        <div class="stat-card" onclick="filterByCard('AMA')" id="card-ama">
+          <div class="stat-label">En proceso AMA</div>
+          <div class="stat-val c-blue" id="sv-ama">0</div>
+          <div class="stat-hint">Haz clic para filtrar</div>
+        </div>
+        <div class="stat-card" onclick="filterByCard('PVSO_VALIDADO')" id="card-validado">
+          <div class="stat-label">Validados hoy</div>
+          <div class="stat-val c-green" id="sv-validado">0</div>
+          <div class="stat-hint">Haz clic para filtrar</div>
+        </div>
+        <div class="stat-card" onclick="filterByCard('')" id="card-total">
+          <div class="stat-label">Total este mes</div>
+          <div class="stat-val c-gray" id="sv-total">0</div>
+          <div class="stat-hint">Mostrar todos</div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input class="search-box" type="text" placeholder="Buscar empresa, RUC, zona..." oninput="searchList(this.value)"/>
+        <select class="filter-sel" onchange="filterSede(this.value)" id="sel-sede">
+          <option value="">Todas las sedes</option>
+          <option value="AQP">Arequipa (AQP)</option>
+          <option value="AYP">Ayacucho (AYP)</option>
+          <option value="JUL">Juliaca (JUL)</option>
+          <option value="PEM">Puerto Maldonado (PEM)</option>
+          <option value="TCQ">Tacna (TCQ)</option>
+        </select>
+        <select class="filter-sel" onchange="filterEstado(this.value)" id="sel-estado">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE_REVISION_SLA">Pendiente revisión</option>
+          <option value="CON_OBSERVACIONES">Con observaciones</option>
+          <option value="APROBADO_SLA">Aprobado SLA</option>
+          <option value="EN_ELABORACION_MATRIZ">En elaboración matriz</option>
+          <option value="PENDIENTE_DGAC">Pendiente DGAC</option>
+          <option value="APROBADO_DGAC">Aprobado DGAC</option>
+          <option value="NOTAM_PUBLICADO">NOTAM publicado</option>
+          <option value="PVSO_VALIDADO">Validado</option>
+        </select>
+        <select class="filter-sel" onchange="filterTipo(this.value)">
+          <option value="">Todos los tipos</option>
+          <option value="AMA">AMA</option>
+          <option value="AME">AME</option>
+          <option value="Visita">Visita</option>
+        </select>
+        <div id="active-filter-label" style="display:none;font-size:12px;color:var(--blue-mid);font-weight:500;align-items:center;gap:6px">
+          <span id="filter-label-text"></span>
+          <button class="clear-filter-btn" onclick="filterByCard('')">✕ Limpiar</button>
+        </div>
+      </div>
+
+      <div id="list-panel">
+        <div class="pvso-list" id="pvso-list"></div>
+      </div>
+
+      <div id="detail-panel">
+        <button class="detail-back" onclick="showList()">← Volver a la lista</button>
+        <div id="detail-content"></div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB DASHBOARD ════════════════════════════════════════ -->
+    <div id="tab-dashboard-content" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:16px;font-weight:600;color:var(--g900)">Panorama PVSO — Todas las sedes</div>
+          <div style="font-size:12px;color:var(--g400)">Datos consolidados de AQP · AYP · JUL · PEM · TCQ</div>
+        </div>
+        <select class="filter-sede-select" id="dash-sede-filter" onchange="renderDashboard()">
+          <option value="">Todas las sedes</option>
+          <option value="AQP">Arequipa (AQP)</option>
+          <option value="AYP">Ayacucho (AYP)</option>
+          <option value="JUL">Juliaca (JUL)</option>
+          <option value="PEM">Puerto Maldonado (PEM)</option>
+          <option value="TCQ">Tacna (TCQ)</option>
+        </select>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="kpi-val" id="kpi-total">—</div><div class="kpi-label">Total PVSO este mes</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-ama" style="color:var(--red)">—</div><div class="kpi-label">Actividades AMA</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-validados" style="color:var(--green)">—</div><div class="kpi-label">Validados</div></div>
+        <div class="kpi"><div class="kpi-val" id="kpi-pendientes" style="color:var(--amber)">—</div><div class="kpi-label">Pendientes revisión</div></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>Distribución por estado</h3>
+          <canvas id="chart-estados" height="200"></canvas>
+        </div>
+        <div class="dash-card">
+          <h3>Distribución por tipo de actividad</h3>
+          <canvas id="chart-tipos" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <h3>Solicitudes por sede</h3>
+          <div id="sede-bars"></div>
+        </div>
+        <div class="dash-card">
+          <h3>Últimas solicitudes recibidas</h3>
+          <div id="timeline-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB BITÁCORA ══════════════════════════════════════════ -->
+    <div id="tab-bitacora-content" style="display:none">
+      <!-- Header con toggle de vista -->
+      <div class="bita-nav-row">
+        <div>
+          <div style="font-size:16px;font-weight:600;color:var(--g900)">Bitácora de ingresos</div>
+          <div style="font-size:12px;color:var(--g400)" id="bita-subtitle">Actividades programadas</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div class="bita-view-toggle">
+            <button class="bita-view-btn active" id="bvb-semana" onclick="setBitaView('semana')">Semana</button>
+            <button class="bita-view-btn" id="bvb-mes" onclick="setBitaView('mes')">Mes</button>
+          </div>
+          <select class="filter-sede-select" id="bita-sede-filter" onchange="renderBitacora()">
+            <option value="">Todas las sedes</option>
+            <option value="AQP">Arequipa (AQP)</option>
+            <option value="AYP">Ayacucho (AYP)</option>
+            <option value="JUL">Juliaca (JUL)</option>
+            <option value="PEM">Puerto Maldonado (PEM)</option>
+            <option value="TCQ">Tacna (TCQ)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Navegación período -->
+      <div class="bita-nav-row" style="margin-bottom:.75rem">
+        <button class="bita-nav-arrow" onclick="navBita(-1)">←</button>
+        <div class="bita-period-label" id="bita-period-label">—</div>
+        <button class="bita-nav-arrow" onclick="navBita(1)">→</button>
+        <button style="font-size:12px;font-family:inherit;padding:5px 12px;border:.5px solid var(--blue-mid);border-radius:var(--r);background:var(--blue-light);color:var(--blue-mid);cursor:pointer;font-weight:500" onclick="goToToday()">Hoy</button>
+      </div>
+
+      <!-- Vista semana -->
+      <div id="bita-view-semana">
+        <div class="bita-week-strip" id="bita-week-strip"></div>
+        <div class="bita-summary">
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bk-total">0</div><div class="bita-kpi-label">Ingresos este día</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bk-ama" style="color:var(--red)">0</div><div class="bita-kpi-label">AMA activos</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bk-ame" style="color:var(--green)">0</div><div class="bita-kpi-label">AME activos</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bk-personas" style="color:var(--blue-mid)">0</div><div class="bita-kpi-label">Personal total</div></div>
+        </div>
+        <div class="bita-list" id="bita-list"></div>
+      </div>
+
+      <!-- Vista mes -->
+      <div id="bita-view-mes" style="display:none">
+        <div class="bita-month-summary">
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bkm-total">0</div><div class="bita-kpi-label">Ingresos en el mes</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bkm-ama" style="color:var(--red)">0</div><div class="bita-kpi-label">Actividades AMA</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bkm-ame" style="color:var(--green)">0</div><div class="bita-kpi-label">Actividades AME</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bkm-personas" style="color:var(--blue-mid)">0</div><div class="bita-kpi-label">Personal total</div></div>
+          <div class="bita-kpi"><div class="bita-kpi-val" id="bkm-dias" style="color:var(--purple)">0</div><div class="bita-kpi-label">Días con actividad</div></div>
+        </div>
+        <div class="bita-cal" id="bita-cal"></div>
+        <p style="font-size:12px;color:var(--g400);margin-top:.5rem">Haz clic en cualquier día para ver el detalle de ingresos en la vista semanal.</p>
+      </div>
+    </div>
+
+    <!-- ═══ TAB MATRIZ (Gestor SMS) ══════════════════════════════ -->
+    <div id="tab-matriz-content" style="display:none">
+      <p style="font-size:13px;color:var(--g600);margin-bottom:1rem">PVSOs AMA aprobados por el SLA que requieren elaboración de Matriz HIRA.</p>
+      <div class="pvso-list" id="matriz-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+
+// --- ESTADO -------------------------------------------------------------------
+const API_URL = 'https://script.google.com/macros/s/AKfycbwLLrTb5zJ4wJGDdDwEpz3eWAsNAkCOR5pmxu7f5XZ0jNlkisuMPp8NK-0zfwgUGZuX/exec';
+let currentUser = null, currentPVSO = null, allPVSOs = [], filteredPVSOs = [];
+let activeCardFilter = '', chartEstados = null, chartTipos = null;
+let matrizModoSeleccionado = {};
+function seleccionarModoMatriz(pvsoId, modo) { matrizModoSeleccionado[pvsoId] = modo; renderDetail(); }
+// Mapeo: nombre de ítem del PVSO -> lista de claves de adjunto correspondientes (hoja "Adjuntos")
+const ITEM_ADJ_MAP = {
+  'Cronograma': ['cronograma'],
+  'Área de cercamiento': ['plano_cercamiento'],
+  'Equipos y maquinaria': ['carta_i', 'carta_g'],
+  'Responsables': ['carta_c'],
+};
+const ITEM_ADJ_LABEL = {
+  cronograma: 'Cronograma de actividades',
+  plano_cercamiento: 'Plano / croquis de cercamiento',
+  carta_i: 'Carta I — Facilidades de equipos / insumos',
+  carta_g: 'Carta G — Facilidades vehiculares',
+  carta_c: 'Carta C — Facilidades personales',
+};
+// Índice fijo de cada ítem del PVSO (mismo orden que itemsData en renderDetail)
+const ITEM_IDX = {
+  'Tipo de atención y período': 0, 'Objeto del proyecto': 1, 'Cronograma': 2,
+  'Ubicación': 3, 'Área de cercamiento': 4, 'Señalización': 5,
+  'Equipos y maquinaria': 6, 'Rutas establecidas': 7, 'Responsables': 8,
+};
+
+// --- DATOS DEMO ---------------------------------------------------------------
+const DEMO = [
+  {id:'PVSO-AQP-001',sede:'AQP',empresa:'Constructora Andina S.A.C.',ruc:'20512345678',contacto:'Juan Quispe',email:'j@andina.com',tipo_clasificacion:'AMA',zona:'Pista de aterrizaje 10-28 (RWY)',objeto:'Rehabilitación de pavimento umbral RWY 28',cronograma:'L-V 22:00-05:00, 3 semanas',senalizacion:'Conos naranjas cada 3m, tableros área fuera de servicio, balizas',area_cercamiento:'Área 50x30m con malla perimetral al norte de umbral 28',rutas:'Portón norte → vía perimetral este → umbral RWY 28',reso_tercero:'Carlos Medina',reso_tercero_cel:'987654321',reso_tercero_correo:'c@andina.com',reso_aap_nombre:'Roberto Cáceres',reso_aap_area:'Operaciones',reso_aap_cel:'956321478',reso_aap_correo:'r@aap.com',num_personal:8,equipos_mayores:'Fresadora asfalto, rodillo (h=2.8m)',fecha_ingreso:'2026-07-15T22:00',fecha_salida:'2026-08-05T05:00',rep_legal:'María López',rep_dni:'12345678',timestamp:'2026-06-25T10:30:00',estado:'PENDIENTE_REVISION_SLA',items_estado:{'Tipo de atención y período':'pending','Objeto del proyecto':'pending','Cronograma':'pending','Ubicación':'pending','Área de cercamiento':'pending','Señalización':'pending','Equipos y maquinaria':'pending','Rutas establecidas':'pending','Responsables':'pending'},items_obs:{},historial:[{fecha:'2026-06-25T10:30',accion:'PVSO recibido',usuario:'Sistema'}]},
+  {id:'PVSO-AQP-002',sede:'AQP',empresa:'HERCO Combustibles Perú',ruc:'20498765432',contacto:'Ana Torres',email:'a@herco.pe',tipo_clasificacion:'AME',zona:'Depósito combustible (HERCO)',objeto:'Mantenimiento de válvulas de seguridad',cronograma:'Ma y Ju 08:00-12:00, 2 semanas',senalizacion:'Conos rojos cada 5m, extintor clase B',area_cercamiento:'No aplica',rutas:'Vía de servicio sur, sin cruce de áreas de movimiento',reso_tercero:'Luis Paredes',reso_tercero_cel:'976543210',reso_tercero_correo:'l@herco.pe',reso_aap_nombre:'Silvia Mamani',reso_aap_area:'Mantenimiento',reso_aap_cel:'945678321',reso_aap_correo:'s@aap.com',num_personal:3,equipos_menores:'Llave de válvulas, manómetros',fecha_ingreso:'2026-07-08T08:00',fecha_salida:'2026-07-18T12:00',rep_legal:'Pedro Villanueva',rep_dni:'87654321',timestamp:'2026-06-26T09:15:00',estado:'CON_OBSERVACIONES',items_estado:{'Tipo de atención y período':'ok','Objeto del proyecto':'ok','Cronograma':'obs','Ubicación':'ok','Área de cercamiento':'ok','Señalización':'obs','Equipos y maquinaria':'ok','Rutas establecidas':'ok','Responsables':'ok'},items_obs:{'Cronograma':'Especificar horario exacto de cada dia y numero de operarios por turno.','Señalización':'Adjuntar ficha tecnica del extintor clase B homologado.'},historial:[{fecha:'2026-06-26T09:15',accion:'PVSO recibido',usuario:'Sistema'},{fecha:'2026-06-26T14:30',accion:'Observaciones enviadas al contratista',usuario:'Miguel Sánchez (SLA)'}]},
+  {id:'PVSO-AQP-003',sede:'AQP',empresa:'Topografía & Estudios SAC',ruc:'20512987654',contacto:'Rosa Condori',email:'r@topo.pe',tipo_clasificacion:'AME',zona:'Cerco perimetral',objeto:'Monitoreo topográfico tramo norte',cronograma:'L-Mi 07:00-11:00, 1 semana',senalizacion:'Conos amarillos cada 10m en acceso',area_cercamiento:'No aplica',rutas:'Portón norte → cruce TWY Alfa punto km 0.8 → vía perimetral norte',reso_tercero:'Jorge Huanca',reso_tercero_cel:'965432187',reso_tercero_correo:'j@topo.pe',reso_aap_nombre:'David Flores',reso_aap_area:'Operaciones',reso_aap_cel:'934567812',reso_aap_correo:'d@aap.com',num_personal:2,equipos_menores:'Estación total, prismas',fecha_ingreso:'2026-07-07T07:00',fecha_salida:'2026-07-09T11:00',rep_legal:'Carmen Quispe',rep_dni:'43210987',timestamp:'2026-06-27T08:00:00',estado:'APROBADO_SLA',items_estado:{'Tipo de atención y período':'ok','Objeto del proyecto':'ok','Cronograma':'ok','Ubicación':'ok','Área de cercamiento':'ok','Señalización':'ok','Equipos y maquinaria':'ok','Rutas establecidas':'ok','Responsables':'ok'},items_obs:{},historial:[{fecha:'2026-06-27T08:00',accion:'PVSO recibido',usuario:'Sistema'},{fecha:'2026-06-27T11:45',accion:'Todos los ítems aprobados por SLA',usuario:'Miguel Sánchez (SLA)'}],matriz_estado:null,dgac_estado:null,notam_num:null},
+  {id:'PVSO-AYP-001',sede:'AYP',empresa:'Mantenimiento Civil Sur E.I.R.L.',ruc:'20567891234',contacto:'Marco Ríos',email:'m@mcsur.pe',tipo_clasificacion:'AMA',zona:'Calle de rodaje Alfa',objeto:'Bacheo mayor en TWY Alfa tramo central',cronograma:'L-V 23:00-06:00, 2 semanas',senalizacion:'Tableros área fuera de servicio, conos rojos cada 2m, balizas nocturnas',area_cercamiento:'Área 80x20m con malla y señalética de seguridad',rutas:'Portón este → vía de servicio norte → TWY Alfa km 0.5',reso_tercero:'Raúl Vega',reso_tercero_cel:'954321678',reso_tercero_correo:'r@mcsur.pe',reso_aap_nombre:'Patricia Luna',reso_aap_area:'Mantenimiento',reso_aap_cel:'923456781',reso_aap_correo:'p@aap.com',num_personal:12,equipos_mayores:'Compresora, cortadora de asfalto (h=1.5m)',fecha_ingreso:'2026-07-20T23:00',fecha_salida:'2026-08-02T06:00',rep_legal:'Juan Ríos Vargas',rep_dni:'55678901',timestamp:'2026-06-28T14:00:00',estado:'EN_ELABORACION_MATRIZ',items_estado:{'Tipo de atención y período':'ok','Objeto del proyecto':'ok','Cronograma':'ok','Ubicación':'ok','Área de cercamiento':'ok','Señalización':'ok','Equipos y maquinaria':'ok','Rutas establecidas':'ok','Responsables':'ok'},items_obs:{},historial:[{fecha:'2026-06-28T14:00',accion:'PVSO recibido',usuario:'Sistema'},{fecha:'2026-06-28T16:30',accion:'Ítems aprobados por SLA',usuario:'Laura Paz (SLA)'},{fecha:'2026-06-28T16:31',accion:'Gestor SMS notificado para elaborar Matriz HIRA',usuario:'Sistema'}]},
+  {id:'PVSO-JUL-001',sede:'JUL',empresa:'Señalética Vial Andina S.A.C.',ruc:'20534567890',contacto:'Diana Castro',email:'d@sva.pe',tipo_clasificacion:'AME',zona:'Plataforma PEAs',objeto:'Repintado de señalización horizontal PEA 3 y 4',cronograma:'Sáb 06:00-14:00, 2 sábados',senalizacion:'Conos naranjas cada 3m, señal área en mantenimiento',area_cercamiento:'PEA 3-4 cerrados con conos',rutas:'Acceso directo por vía de servicio desde terminal',reso_tercero:'Pablo Torres',reso_tercero_cel:'943217856',reso_tercero_correo:'p@sva.pe',reso_aap_nombre:'César Mamani',reso_aap_area:'Operaciones',reso_aap_cel:'912345678',reso_aap_correo:'c@aap.com',num_personal:4,equipos_menores:'Máquina pintabandas, plantillas señalización',fecha_ingreso:'2026-07-05T06:00',fecha_salida:'2026-07-12T14:00',rep_legal:'Diana Castro Flores',rep_dni:'67890123',timestamp:'2026-06-29T10:00:00',estado:'PVSO_VALIDADO',items_estado:{'Tipo de atención y período':'ok','Objeto del proyecto':'ok','Cronograma':'ok','Ubicación':'ok','Área de cercamiento':'ok','Señalización':'ok','Equipos y maquinaria':'ok','Rutas establecidas':'ok','Responsables':'ok'},items_obs:{},historial:[{fecha:'2026-06-29T10:00',accion:'PVSO recibido',usuario:'Sistema'},{fecha:'2026-06-29T13:15',accion:'PVSO validado. Documentos generados.',usuario:'Ana Quiroz (SLA)'}],codigo_interno:'PVSO-JUL-2026-012'},
+  {id:'PVSO-PEM-001',sede:'PEM',empresa:'Fauna Control Perú S.A.',ruc:'20589012345',contacto:'Elena Vargas',email:'e@fcp.pe',tipo_clasificacion:'AME',zona:'Zona de escudos / franjas de seguridad',objeto:'Monitoreo de fauna en franja lateral de pista',cronograma:'Ma y Ju 06:00-09:00, mensual',senalizacion:'No requiere señalización especial por franja lateral',area_cercamiento:'No aplica',rutas:'Portón sur → franja lateral pista lado este',reso_tercero:'Félix Rojas',reso_tercero_cel:'932109876',reso_tercero_correo:'f@fcp.pe',reso_aap_nombre:'Isabel Quispe',reso_aap_area:'Medio Ambiente / SSOMA',reso_aap_cel:'901234567',reso_aap_correo:'i@aap.com',num_personal:2,equipos_menores:'Binoculares, GPS, formularios de registro',fecha_ingreso:'2026-07-01T06:00',fecha_salida:'2026-07-30T09:00',rep_legal:'Elena Vargas Soto',rep_dni:'78901234',timestamp:'2026-06-30T07:30:00',estado:'PENDIENTE_REVISION_SLA',items_estado:{'Tipo de atención y período':'pending','Objeto del proyecto':'pending','Cronograma':'pending','Ubicación':'pending','Área de cercamiento':'pending','Señalización':'pending','Equipos y maquinaria':'pending','Rutas establecidas':'pending','Responsables':'pending'},items_obs:{},historial:[{fecha:'2026-06-30T07:30',accion:'PVSO recibido',usuario:'Sistema'}]}
+];
+
+// --- UTILS --------------------------------------------------------------------
+function notif(msg,ms=2500){const n=document.getElementById('notif');n.textContent=msg;n.style.display='block';setTimeout(()=>n.style.display='none',ms);}
+function fmtDate(ts){if(!ts)return'—';const d=new Date(ts);return d.toLocaleDateString('es-PE',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});}
+function estadoLabel(e){const m={'PENDIENTE_REVISION_SLA':'Pendiente revisión SLA','CON_OBSERVACIONES':'Con observaciones','CORREGIDO_PENDIENTE_REVISION':'Corregido pendiente revisión','APROBADO_SLA':'Aprobado SLA','MATRIZ_PENDIENTE_VALIDACION':'Matriz pendiente de validación','EN_ELABORACION_MATRIZ':'En elaboración Matriz','PENDIENTE_DGAC':'Pendiente DGAC','APROBADO_DGAC':'Aprobado DGAC','NOTAM_PUBLICADO':'NOTAM publicado','PVSO_VALIDADO':'PVSO Validado ✓'};return m[e]||e;}
+function estadoCls(e){const m={'PENDIENTE_REVISION_SLA':'e-pending','CON_OBSERVACIONES':'e-obs','CORREGIDO_PENDIENTE_REVISION':'e-plain-bold','APROBADO_SLA':'e-sla','MATRIZ_PENDIENTE_VALIDACION':'e-matriz','EN_ELABORACION_MATRIZ':'e-matriz','PENDIENTE_DGAC':'e-dgac','APROBADO_DGAC':'e-notam','NOTAM_PUBLICADO':'e-notam','PVSO_VALIDADO':'e-validado'};return m[e]||'';}
+function indColor(e){const m={'PENDIENTE_REVISION_SLA':'#EF9F27','CON_OBSERVACIONES':'#E24B4A','APROBADO_SLA':'#185FA5','EN_ELABORACION_MATRIZ':'#8B5CF6','PENDIENTE_DGAC':'#EF9F27','APROBADO_DGAC':'#0A6E9E','NOTAM_PUBLICADO':'#0A6E9E','PVSO_VALIDADO':'#3B6D11'};return m[e]||'#9A9690';}
+function tipoCls(t){return t==='AMA'?'b-ama':t==='AME'?'b-ame':'b-visita';}
+
+// --- LOGIN --------------------------------------------------------------------
+document.getElementById('login-rol').addEventListener('change', function(){
+  document.getElementById('sede-field').style.display = this.value === 'gerencia' ? 'none' : 'block';
+});
+
+function doLogin(){
+  const rol=document.getElementById('login-rol').value;
+  const nombre=document.getElementById('login-nombre').value.trim();
+  const sede=document.getElementById('login-sede').value;
+  if(!rol||!nombre){notif('Completa todos los campos');return;}
+  currentUser={rol,nombre,sede};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.getElementById('hdr-sub').textContent=`${nombre}${rol!=='gerencia'?' · '+sede:''}`;
+  const rb=document.getElementById('role-badge');
+  rb.textContent=rol==='sla'?'Supervisor Lado Aire':rol==='gestor'?'Jefe SMS':rol==='asistente'?'Asistente SMS':'Gerencia';
+  rb.className='role-badge '+(rol==='sla'?'role-sla':(rol==='gestor'||rol==='asistente')?'role-gestor':'role-gerencia');
+  if(rol==='gestor'||rol==='asistente')document.getElementById('tab-matriz').style.display='block';
+  // Preseleccionar sede en bitácora
+  if(rol !== 'gerencia'){
+    const bitaSel = document.getElementById('bita-sede-filter');
+    if(bitaSel) bitaSel.value = sede;
+  }
+  if(rol==='gerencia'){document.getElementById('tab-solicitudes').style.display='none';showTab('dashboard');}
+  loadPVSOs();
+  // Preseleccionar sede del usuario en lista Y dashboard
+  if(currentUser.rol !== 'gerencia'){
+    const selSede = document.getElementById('sel-sede');
+    if(selSede){ selSede.value = currentUser.sede; filterSede(currentUser.sede); }
+    const selDash = document.getElementById('dash-sede-filter');
+    if(selDash){ selDash.value = currentUser.sede; }
+  }
+}
+function doLogout(){currentUser=null;document.getElementById('login-screen').style.display='flex';document.getElementById('app-screen').style.display='none';location.reload();}
+
+// --- DATOS --------------------------------------------------------------------
+async function loadPVSOs() {
+  try {
+    const sede = currentUser.rol === 'gerencia' ? '' : currentUser.sede;
+    const apiUrl = API_URL + '?action=listar' + (sede ? '&sede=' + sede : '');
+    const resp = await fetch(apiUrl);
+    const json = await resp.json();
+    if (json.ok && json.data && json.data.length > 0) {
+      allPVSOs = json.data.map(p => {
+        if (!p.tipo_clasificacion) {
+          const ta = (p.tipo_actividad || '').toLowerCase();
+          if (ta.includes('ama') || ta.includes('mayor')) p.tipo_clasificacion = 'AMA';
+          else if (ta.includes('visita')) p.tipo_clasificacion = 'Visita';
+          else p.tipo_clasificacion = 'AME';
+        }
+        if (!p.fecha_ingreso) p.fecha_ingreso = p.fecha_ingreso_solicitada;
+        if (!p.fecha_salida) p.fecha_salida = p.fecha_salida_solicitada;
+        return p;
+      });
+    } else {
+      allPVSOs = DEMO;
+    }
+  } catch(e) {
+    console.warn('Usando datos demo:', e);
+    allPVSOs = DEMO;
+  }
+  filteredPVSOs = [...allPVSOs];
+  updateStats();
+  renderList();
+  renderMatrizTab();
+}
+
+async function guardarRespAdicional(pvsoId) {
+  const nombre = document.getElementById('ra-nombre-' + pvsoId)?.value.trim();
+  const area = document.getElementById('ra-area-' + pvsoId)?.value.trim();
+  const celular = document.getElementById('ra-cel-' + pvsoId)?.value.trim();
+  const correo = document.getElementById('ra-correo-' + pvsoId)?.value.trim();
+
+  if (!nombre) { notif('⚠ Ingresa el nombre del responsable adicional', 3000); return; }
+
+  const respData = { nombre, area, celular, correo };
+  await guardarCambiosPVSO(pvsoId, {
+    resp_adicional_aap: JSON.stringify(respData)
+  }, 'Responsable adicional AAP designado: ' + nombre);
+
+  // Actualizar en memoria
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (p) p.resp_adicional_aap = JSON.stringify(respData);
+
+  notif('✓ Responsable adicional designado: ' + nombre, 3000);
+  renderDetail();
+}
+
+function editarRespAdicional(pvsoId) {
+  const form = document.getElementById('form-resp-adicional-' + pvsoId);
+  if (form) form.style.display = 'block';
+}
+
+async function guardarCambiosPVSO(id, cambios, accion) {
+  try {
+    const rolLbl = currentUser.rol === 'sla' ? 'SLA' : currentUser.rol === 'asistente' ? 'Asistente SMS' : 'Gestor SMS';
+    const payload = { modo: 'actualizar', id, cambios, accion, usuario: currentUser.nombre + ' (' + rolLbl + ')' };
+    await fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.warn('Error guardando:', e); }
+}
+function updateStats(){
+  const today=new Date().toDateString();
+  document.getElementById('sv-pendiente').textContent=allPVSOs.filter(p=>p.estado==='PENDIENTE_REVISION_SLA').length;
+  document.getElementById('sv-obs').textContent=allPVSOs.filter(p=>p.estado==='CON_OBSERVACIONES').length;
+  document.getElementById('sv-ama').textContent=allPVSOs.filter(p=>p.tipo_clasificacion==='AMA'&&p.estado!=='PVSO_VALIDADO').length;
+  document.getElementById('sv-validado').textContent=allPVSOs.filter(p=>p.estado==='PVSO_VALIDADO'&&new Date(p.timestamp).toDateString()===today).length;
+  document.getElementById('sv-total').textContent=allPVSOs.length;
+}
+
+// --- FILTRO POR TARJETA (CLICKEABLE) ------------------------------------------
+function filterByCard(key){
+  document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active-filter'));
+  const lbl=document.getElementById('active-filter-label');
+  if(!key){filteredPVSOs=[...allPVSOs];lbl.style.display='none';document.getElementById('sel-estado').value='';renderList();return;}
+  document.getElementById('card-'+(key==='AMA'?'ama':key==='PENDIENTE_REVISION_SLA'?'pendiente':key==='CON_OBSERVACIONES'?'obs':key==='PVSO_VALIDADO'?'validado':'total'))?.classList.add('active-filter');
+  if(key==='AMA'){filteredPVSOs=allPVSOs.filter(p=>p.tipo_clasificacion==='AMA'&&p.estado!=='PVSO_VALIDADO');}
+  else{filteredPVSOs=allPVSOs.filter(p=>p.estado===key);}
+  const labels={'PENDIENTE_REVISION_SLA':'Pendientes revisión','CON_OBSERVACIONES':'Con observaciones','PVSO_VALIDADO':'Validados hoy','AMA':'En proceso AMA'};
+  document.getElementById('filter-label-text').textContent='Filtrando: '+labels[key];
+  lbl.style.display='flex';
+  renderList();
+}
+function searchList(q){q=q.toLowerCase();filteredPVSOs=allPVSOs.filter(p=>p.empresa.toLowerCase().includes(q)||p.ruc.includes(q)||p.zona.toLowerCase().includes(q)||p.id.toLowerCase().includes(q));renderList();}
+function filterSede(v){
+  // Sincronizar selector del dashboard
+  const dashSel = document.getElementById('dash-sede-filter');
+  if(dashSel) dashSel.value = v;
+  filteredPVSOs=v?allPVSOs.filter(p=>p.sede===v):[...allPVSOs];
+  activeCardFilter='';
+  document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active-filter'));
+  document.getElementById('active-filter-label').style.display='none';
+  renderList();
+}
+function filterEstado(v){filteredPVSOs=v?allPVSOs.filter(p=>p.estado===v):[...allPVSOs];activeCardFilter='';document.querySelectorAll('.stat-card').forEach(c=>c.classList.remove('active-filter'));document.getElementById('active-filter-label').style.display='none';renderList();}
+function filterTipo(v){filteredPVSOs=v?allPVSOs.filter(p=>p.tipo_clasificacion.includes(v)):[...allPVSOs];renderList();}
+
+// --- RENDER LIST --------------------------------------------------------------
+function renderList(){
+  if(document.getElementById('detail-panel').style.display==='block')return;
+  const c=document.getElementById('pvso-list');
+  if(!filteredPVSOs.length){c.innerHTML=`<div class="empty"><p>No hay solicitudes para mostrar</p></div>`;return;}
+  c.innerHTML=filteredPVSOs.map(p=>`
+    <div class="pvso-card" onclick="openPVSO('${p.id}')">
+      <div class="pvso-card-hdr">
+        <div class="pvso-indicator" style="background:${indColor(p.estado)}"></div>
+        <div class="pvso-info">
+          <div class="pvso-empresa">${p.empresa}</div>
+          <div class="pvso-meta">${p.id} · ${p.sede} · ${p.zona} · ${fmtDate(p.timestamp)}</div>
+        </div>
+        <div class="pvso-badges">
+          <span class="badge-sm ${tipoCls(p.tipo_clasificacion)}">${p.tipo_clasificacion}</span>
+          <span class="pvso-estado ${estadoCls(p.estado)}">${estadoLabel(p.estado)}</span>
+        </div>
+        <span class="pvso-arrow">›</span>
+      </div>
+    </div>`).join('');
+}
+
+// --- TABS ---------------------------------------------------------------------
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  ['solicitudes','dashboard','matriz'].forEach(t=>{const el=document.getElementById('tab-'+t+'-content');if(el)el.style.display='none';});
+  document.getElementById('tab-'+tab+'-content').style.display='block';
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='bitacora')renderBitacora();
+}
+
+// --- NAVIGATION ---------------------------------------------------------------
+function showList(){document.getElementById('list-panel').style.display='block';document.getElementById('detail-panel').style.display='none';}
+function openPVSO(id){currentPVSO=allPVSOs.find(p=>p.id===id);if(!currentPVSO)return;document.getElementById('list-panel').style.display='none';document.getElementById('detail-panel').style.display='block';renderDetail();}
+
+// --- RENDER DETAIL ------------------------------------------------------------
+function renderDetail(){
+  const p=currentPVSO,rol=currentUser.rol,esAMA=p.tipo_clasificacion==='AMA';
+  const pasos=esAMA?[{l:'Recepción',k:'recv'},{l:'Revisión SLA',k:'sla'},{l:'Matriz SMS',k:'matriz'},{l:'DGAC',k:'dgac'},{l:'NOTAM',k:'notam'},{l:'Validado',k:'done'}]:[{l:'Recepción',k:'recv'},{l:'Revisión SLA',k:'sla'},{l:'Validado',k:'done'}];
+  const eOrder=esAMA?['PENDIENTE_REVISION_SLA','CON_OBSERVACIONES','CORREGIDO_PENDIENTE_REVISION','APROBADO_SLA','MATRIZ_PENDIENTE_VALIDACION','EN_ELABORACION_MATRIZ','PENDIENTE_DGAC','APROBADO_DGAC','NOTAM_PUBLICADO','PVSO_VALIDADO']:['PENDIENTE_REVISION_SLA','CON_OBSERVACIONES','CORREGIDO_PENDIENTE_REVISION','APROBADO_SLA','PVSO_VALIDADO'];
+  const ci=eOrder.indexOf(p.estado);
+  const pc=esAMA?{recv:true,sla:ci>=3,matriz:ci>=4,dgac:ci>=7,notam:ci>=8,done:p.estado==='PVSO_VALIDADO'}:{recv:true,sla:ci>=3,done:p.estado==='PVSO_VALIDADO'};
+  const flujoHtml=pasos.map((paso,i)=>{const done=pc[paso.k];const isCurr=!done&&(i===0||pc[pasos[i-1]?.k]);const dc=done?'f-done':isCurr?'f-curr':'f-pend';const lc=done?'fl-done':'fl-pend';return`<div class="flujo-step"><div class="flujo-dot ${dc}">${done?'✓':i+1}</div><div class="flujo-label">${paso.l}</div></div>${i<pasos.length-1?`<div class="flujo-line ${lc}"></div>`:''}`}).join('');
+  const itemsData={'Tipo de atención y período':`Tipo: ${p.tipo_clasificacion}\nIngreso: ${p.fecha_ingreso||'—'}\nSalida: ${p.fecha_salida||'—'}`,'Objeto del proyecto':p.objeto||'—','Cronograma':p.cronograma||'—','Ubicación':p.zona||'—','Área de cercamiento':p.area_cercamiento||'No aplica','Señalización':p.senalizacion||'—','Equipos y maquinaria':`Menores: ${p.equipos_menores||'No aplica'}\nMayores: ${p.equipos_mayores||'No aplica'}`,'Rutas establecidas':p.rutas||'—','Responsables':`RESO Tercero: ${p.reso_tercero} (${p.reso_tercero_cel})\nRESO AAP: ${p.reso_aap_nombre} · ${p.reso_aap_area} (${p.reso_aap_cel})\nPersonal: ${p.num_personal}`};
+  const canReview=rol==='sla'&&['PENDIENTE_REVISION_SLA','CON_OBSERVACIONES','CORREGIDO_PENDIENTE_REVISION'].includes(p.estado);
+  const itemsHtml=Object.entries(itemsData).map(([name,val],idx)=>{const st=p.items_estado[name]||p.items_estado['I0'+(idx+1)]||'pending';const obs=p.items_obs[name]||p.items_obs['I0'+(idx+1)]||'';const dc=st==='ok'?'id-ok':st==='obs'?'id-obs':'id-pend';const acts=(canReview&&st!=='ok')?`<div class="item-acts"><input class="obs-inp" type="text" id="oi-${idx}" placeholder="Observación..." value="${st==='corregido'?'':obs}"/><button class="btn-ok" onclick="setItem('${name}',${idx},'ok')">✓ Aprobar</button><button class="btn-obs" onclick="setItem('${name}',${idx},'obs')">⚠ Observar</button></div>`:'';const puedeReabrir=rol==='sla'&&p.estado!=='PVSO_VALIDADO';const fb=st==='obs'&&obs?`<div class="item-obs-txt">⚠ ${obs}</div>`:st==='ok'?`<div class="item-ok-txt"><span>✓ Ítem aprobado</span>${puedeReabrir?`<button class="btn-reabrir" onclick="reabrirItem('${name}',${idx})">↺ Reabrir revisión</button>`:''}</div>`:st==='corregido'?`<div style="font-size:12px;font-weight:700;margin-top:8px">Corregido — pendiente de revisión</div>`:'';const adjSlot=ITEM_ADJ_MAP[name]?`<div class="item-adjunto-slot" id="adj-slot-${idx}"></div>`:'';return`<div class="item-row"><div class="item-row-hdr" onclick="toggleItem(${idx})"><span class="item-num">I${String(idx+1).padStart(2,'0')}</span><span class="item-name">${name}</span><div class="item-dot ${dc}"></div><span id="tg-${idx}">›</span></div><div class="item-body" id="ib-${idx}"><div class="item-val">${val}</div>${adjSlot}${acts}${fb}</div></div>`;}).join('');
+  let actsHtml='';
+  if(rol==='sla'){
+    if(['PENDIENTE_REVISION_SLA','CON_OBSERVACIONES','CORREGIDO_PENDIENTE_REVISION'].includes(p.estado)){actsHtml+=`<div class="section-card"><div class="section-title">Acción SLA — Revisión</div><p style="font-size:13px;color:var(--g600);margin-bottom:1rem">Revisa los ítems arriba. Aprueba o añade observaciones individualmente.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn-s" onclick="aprobarTodos()">✓ Aprobar todos los ítems</button><button class="btn-d" onclick="enviarObs()">⚠ Enviar observaciones al contratista</button></div></div>`;}
+    if(p.estado==='APROBADO_SLA'&&!esAMA){actsHtml+=`<div class="section-card"><div class="section-title">Validación final — AME</div><div class="act-field"><label>Código interno</label><input type="text" id="cod-int" placeholder="Ej. PVSO-AQP-2026-047"/></div><div class="act-field"><label>Ingreso confirmado</label><input type="datetime-local" id="fi-conf" value="${p.fecha_ingreso}"/></div><div class="act-field"><label>Salida confirmada</label><input type="datetime-local" id="fs-conf" value="${p.fecha_salida}"/></div><div class="act-field"><label>Observaciones finales</label><textarea id="obs-fin" placeholder="Condiciones especiales..."></textarea></div><button class="btn-s" onclick="validarPVSO()">✓ Generar validación y enviar al contratista</button></div>`;}
+    if(p.estado==='EN_ELABORACION_MATRIZ'){actsHtml+=`<div class="section-card"><div class="section-title">En espera — Matriz HIRA</div><p style="font-size:13px;color:var(--g600)">El Gestor SMS está elaborando la Matriz. Recibirás una notificación cuando esté lista.</p></div>`;}
+    if(p.estado==='PENDIENTE_DGAC'){actsHtml+=`<div class="section-card"><div class="section-title">Validación DGAC</div><div class="act-field"><label>Adjuntar respuesta DGAC (PDF)</label><div class="file-up" onclick="document.getElementById('f-dgac').click()"><input type="file" id="f-dgac" accept=".pdf" onchange="showFN(this,'fn-dgac')"/><label class="file-up-label" for="f-dgac"><strong>Adjuntar</strong> respuesta DGAC</label><div class="file-name-show" id="fn-dgac"></div></div></div><button class="btn-p" onclick="marcarDGAC()">✓ Aprobado por DGAC → Solicitar NOTAM</button></div>`;}
+    if(p.estado==='APROBADO_DGAC'){actsHtml+=`<div class="section-card"><div class="section-title">Registro NOTAM</div><div class="act-field"><label>Número del NOTAM</label><input type="text" id="notam-n" placeholder="Ej. A1234/26"/></div><div class="act-field"><label>Fecha de publicación</label><input type="date" id="notam-f"/></div><button class="btn-p" onclick="registrarNOTAM()">Registrar NOTAM publicado</button></div>`;}
+    if(p.estado==='NOTAM_PUBLICADO'){actsHtml+=`<div class="section-card"><div class="section-title">Validación final — AMA</div><div class="act-field"><label>Código interno</label><input type="text" id="cod-int" placeholder="Ej. PVSO-AQP-2026-047"/></div><div class="act-field"><label>Ingreso confirmado</label><input type="datetime-local" id="fi-conf" value="${p.fecha_ingreso}"/></div><div class="act-field"><label>Salida confirmada</label><input type="datetime-local" id="fs-conf" value="${p.fecha_salida}"/></div><div class="act-field"><label>Observaciones finales</label><textarea id="obs-fin" placeholder="Condiciones especiales, referencia NOTAM..."></textarea></div><button class="btn-s" onclick="validarPVSO()">✓ Generar validación y enviar al contratista</button></div>`;}
+  }
+  // Bloque de generación de Matriz IA — visible para Gestor SMS cuando SLA aprobó
+  // Bloque de responsable adicional — solo Gestor SMS, solo AMA
+  if(rol==='gestor' && esAMA) {
+    const respAd = p.resp_adicional_aap ? JSON.parse(typeof p.resp_adicional_aap === 'string' ? p.resp_adicional_aap : '{}') : null;
+    actsHtml += `<div class="resp-adicional-card">
+      <div class="resp-adicional-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Designar responsable adicional AAP
+      </div>
+      <div class="resp-adicional-sub">Actividad AMA de gran envergadura. Si esta actividad requiere supervisión adicional de AAP (Gestor SMS, Gerencia de Operaciones u otro), designa aquí al segundo responsable. Este dato aparecerá en el PVSO validado que recibe el contratista.</div>
+      ${respAd && respAd.nombre ? `<div class="resp-guardado" style="display:block">
+        <div class="resp-guardado-label">Responsable adicional designado</div>
+        <strong>${respAd.nombre}</strong> · ${respAd.area||'—'}<br/>
+        <span style="opacity:.7;font-size:12px">${respAd.celular||''} ${respAd.correo ? '· '+respAd.correo : ''}</span>
+        <button onclick="editarRespAdicional('${p.id}')" style="margin-left:12px;font-size:11px;background:rgba(255,255,255,.15);border:.5px solid rgba(255,255,255,.3);color:white;border-radius:var(--r);padding:3px 10px;cursor:pointer;font-family:inherit">Editar</button>
+      </div>` : ''}
+      <div id="form-resp-adicional-${p.id}" style="${respAd && respAd.nombre ? 'display:none' : ''}">
+        <div class="resp-adicional-form">
+          <div class="resp-adicional-field">
+            <label>Nombres y apellidos</label>
+            <input type="text" id="ra-nombre-${p.id}" placeholder="Ej. Mg. Amber Grimaldi Velarde" value="${respAd&&respAd.nombre||''}"/>
+          </div>
+          <div class="resp-adicional-field">
+            <label>Área / cargo</label>
+            <input type="text" id="ra-area-${p.id}" placeholder="Ej. Gestor SMS / Jefa de Seg. Operacional" value="${respAd&&respAd.area||''}"/>
+          </div>
+          <div class="resp-adicional-field">
+            <label>Celular</label>
+            <input type="text" id="ra-cel-${p.id}" placeholder="Ej. 987654321" value="${respAd&&respAd.celular||''}"/>
+          </div>
+          <div class="resp-adicional-field">
+            <label>Correo institucional</label>
+            <input type="text" id="ra-correo-${p.id}" placeholder="Ej. seguridad.operacional@aeropuertosandinos.com" value="${respAd&&respAd.correo||''}"/>
+          </div>
+        </div>
+        <button class="btn-guardar-resp" onclick="guardarRespAdicional('${p.id}')">✓ Guardar designación</button>
+      </div>
+    </div>`;
+  }
+
+  if((rol==='gestor'||rol==='asistente'||rol==='sla')&&(p.estado==='APROBADO_SLA'||p.estado==='MATRIZ_PENDIENTE_VALIDACION')&&esAMA){
+    // Si ya existe una matriz pendiente de validación (generada/editada por el SLA), cargarla directamente
+    if (p.estado === 'MATRIZ_PENDIENTE_VALIDACION') {
+      if (!p.matriz_ia) { try { const parsed = JSON.parse(p.matriz_adjunto); if (parsed && parsed.peligros) p.matriz_ia = parsed; } catch(e) {} }
+      if (p.matriz_ia) {
+        actsHtml+=`<div class="matriz-ia-card">
+          <div class="matriz-ia-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><circle cx="18" cy="6" r="3" fill="white" stroke="none"/></svg>
+            Matriz HIRA — Pendiente de validación
+          </div>
+          <div class="matriz-resultado" style="display:block">${renderResultadoMatriz(p.id, p.zona)}</div>
+        </div>`;
+      }
+    } else {
+    const modo = matrizModoSeleccionado[p.id];
+    if (!modo) {
+      actsHtml+=`<div class="section-card"><div class="section-title">Elaborar Matriz HIRA</div>
+        <p style="font-size:13px;color:var(--g600);margin-bottom:1rem">¿Cómo deseas elaborar la Matriz HIRA para este PVSO?</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-gen-matriz" onclick="seleccionarModoMatriz('${p.id}','ia')">✦ Generar automáticamente con IA</button>
+          <button class="btn-regenerar" onclick="seleccionarModoMatriz('${p.id}','manual')">📎 Adjuntar manualmente</button>
+        </div>
+      </div>`;
+    } else if (modo === 'ia') {
+      actsHtml+=`<div class="matriz-ia-card">
+        <div class="matriz-ia-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><circle cx="18" cy="6" r="3" fill="white" stroke="none"/></svg>
+          Generador de Matriz HIRA — Inteligencia Artificial
+        </div>
+        <div class="matriz-ia-sub">La IA analizará los datos del PVSO (zona, actividad, equipos, rutas, personal) y generará automáticamente la Matriz de Gestión de Riesgos de Seguridad Operacional. El Gestor SMS revisará y aprobará antes de emitir el PVSO validado.</div>
+        <button class="btn-gen-matriz" onclick="generarMatrizIA('${p.id}')" id="btn-gen-${p.id}">
+          ✦ Generar Matriz HIRA con IA
+        </button>
+        <button class="btn-regenerar" style="margin-left:8px" onclick="seleccionarModoMatriz('${p.id}',null)">← Cambiar a manual</button>
+        <div class="matriz-loading" id="loading-${p.id}">
+          <span class="spin">⟳</span> Analizando datos del PVSO y generando matriz de riesgos...
+        </div>
+        <div class="matriz-resultado" id="resultado-${p.id}"></div>
+      </div>`;
+    } else if (modo === 'manual') {
+      actsHtml+=`<div class="section-card"><div class="section-title">Elaborar Matriz HIRA — Manual</div><div class="act-field"><label>Adjuntar Matriz HIRA (PDF o Excel)</label><div class="file-up" onclick="document.getElementById('f-mat').click()"><input type="file" id="f-mat" accept=".pdf,.xlsx" onchange="showFN(this,'fn-mat')"/><label class="file-up-label" for="f-mat"><strong>Adjuntar</strong> Matriz HIRA</label><div class="file-name-show" id="fn-mat"></div></div></div><div class="act-field"><label>Observaciones del análisis de riesgos</label><textarea id="obs-mat" placeholder="Riesgos identificados, medidas de control, nivel residual..."></textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap">${rol==='sla'?`<button class="btn-d" onclick="enviarMatriz(true)">⚠ Matriz completada — Aprobar como SLA (Jefe/Asistente SMS no disponible)</button>`:`<button class="btn-s" onclick="enviarMatriz(false)">✓ Matriz completada — Notificar al SLA</button>`}<button class="btn-regenerar" onclick="seleccionarModoMatriz('${p.id}',null)">← Cambiar a IA</button></div></div>`;
+    }
+    }
+  }
+  // Documento de la Matriz HIRA — visible desde que se aprueba, durante todo el resto del flujo
+  {
+    let matrizGuardada=null;
+    try{const parsed=JSON.parse(p.matriz_adjunto);if(parsed&&parsed.peligros)matrizGuardada=parsed;}catch(e){}
+    if(esAMA&&matrizGuardada&&['PENDIENTE_DGAC','APROBADO_DGAC','NOTAM_PUBLICADO','PVSO_VALIDADO'].includes(p.estado)){
+      actsHtml+=`<div class="section-card"><div class="section-title">Matriz HIRA</div><div class="doc-preview" style="border-color:var(--blue-mid)"><div class="doc-icon" style="background:var(--blue-light)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="doc-info"><div class="doc-name">Matriz HIRA — Riesgos aprobados</div><div class="doc-sub">${p.id} · ${matrizGuardada.peligros.length} peligro(s) evaluado(s)</div></div><button class="btn-dl" onclick="verMatrizDocumento('${p.id}')">👁 Ver / Imprimir</button></div></div>`;
+    }
+  }
+  if(p.estado==='PVSO_VALIDADO'){
+    actsHtml+=`<div class="section-card"><div class="section-title">Documentos generados</div><div class="doc-preview"><div class="doc-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="doc-info"><div class="doc-name">PVSO Completo — Uso interno AAP</div><div class="doc-sub">${p.id} · Todos los ítems, firmas y referencias</div></div><button class="btn-dl" onclick="notif('Generando PDF interno...')">↓ Descargar</button></div><div class="doc-preview" style="border-color:var(--green-border)"><div class="doc-icon" style="background:var(--green-bg)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="doc-info"><div class="doc-name">Constancia de validación — Para el contratista</div><div class="doc-sub">${p.id} · Con código QR de verificación en vivo</div></div><button class="btn-dl" onclick="notif('Generando PDF para contratista...')">↓ Descargar</button></div></div>`;
+  }
+  const histHtml=(p.historial||[]).map(h=>{
+    const cambiosHtml=(h.cambios&&h.cambios.length)?h.cambios.map(c=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 10px;margin:4px 0 4px 0;background:var(--g50,#f7f7f5);border-radius:var(--r);font-size:11px">
+      <span style="font-weight:600;color:var(--g900);min-width:110px">${c.campo}</span>
+      <span style="flex:1"><span style="color:var(--red-mid,#A32D2D);text-decoration:line-through;opacity:.7">${c.anterior||'—'}</span> → <span style="color:var(--green-mid,#3B6D11);font-weight:500">${c.nuevo||'—'}</span></span>
+    </div>`).join(''):'';
+    return `<div style="padding:8px 0;border-bottom:.5px solid var(--g100)">
+      <div style="display:flex;gap:10px;font-size:12px">
+        <span style="color:var(--g400);white-space:nowrap;font-family:'JetBrains Mono',monospace">${fmtDate(h.fecha)}</span>
+        <span style="color:var(--g900)">${h.accion}</span>
+        <span style="color:var(--g400);margin-left:auto">${h.usuario}</span>
+      </div>
+      ${cambiosHtml}
+    </div>`;
+  }).join('');
+  document.getElementById('detail-content').innerHTML=`
+    <div class="section-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div><div class="detail-empresa">${p.empresa}</div><div class="detail-sub">${p.id} · RUC ${p.ruc} · ${p.contacto}</div></div>
+        <div style="display:flex;gap:6px"><span class="badge-sm ${tipoCls(p.tipo_clasificacion)}">${p.tipo_clasificacion}</span><span class="pvso-estado ${estadoCls(p.estado)}">${estadoLabel(p.estado)}</span></div>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-item"><div class="meta-label">Zona</div><div class="meta-val">${p.zona}</div></div>
+        <div class="meta-item"><div class="meta-label">Ingreso solicitado</div><div class="meta-val">${excelDateToStr(p.fecha_ingreso_solicitada||p.fecha_ingreso)}</div></div>
+        <div class="meta-item"><div class="meta-label">Recibido</div><div class="meta-val">${fmtDate(p.timestamp)}</div></div>
+      </div>
+    </div>
+    <div class="section-card"><div class="flujo-bar">${flujoHtml}</div></div>
+    <div class="section-card"><div class="section-title">Ítems del PVSO</div>${itemsHtml}</div>
+    <div class="section-card"><div class="section-title">Adjuntos del contratista</div><div id="adjuntos-panel-${p.id}">${renderAdjuntos(p)}</div></div>
+    ${actsHtml}
+    <div class="section-card"><div class="section-title">Historial</div>${histHtml}</div>`;
+}
+
+// --- ACCIONES ----------------------------------------------------------------
+function toggleItem(idx){const b=document.getElementById('ib-'+idx);const t=document.getElementById('tg-'+idx);const o=b.classList.contains('open');b.classList.toggle('open',!o);t.textContent=o?'›':'‹';}
+function reabrirItem(name,idx){currentPVSO.items_estado[name]='pending';delete currentPVSO.items_obs[name];const estadoAnterior=currentPVSO.estado;const cambios={items_estado:currentPVSO.items_estado,items_obs:currentPVSO.items_obs};let accionR=`Ítem reabierto para nueva revisión: ${name}`;if(estadoAnterior!=='PENDIENTE_REVISION_SLA'&&estadoAnterior!=='CON_OBSERVACIONES'&&estadoAnterior!=='CORREGIDO_PENDIENTE_REVISION'){currentPVSO.estado='PENDIENTE_REVISION_SLA';cambios.estado=currentPVSO.estado;accionR+=`. El PVSO vuelve a "Pendiente revisión SLA" (estaba en "${estadoLabel(estadoAnterior)}")`;}guardarCambiosPVSO(currentPVSO.id,cambios,accionR);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionR,usuario:currentUser.nombre+' (SLA)'});notif(`↺ ${name} reabierto para revisión`);updateStats();renderDetail();document.getElementById('ib-'+idx)?.classList.add('open');}
+function setItem(name,idx,status){const inp=document.getElementById('oi-'+idx);const obs=inp?.value.trim()||'';if(status==='obs'&&!obs){notif('⚠ Escribe la observación antes de marcar este ítem');inp?.focus();return;}currentPVSO.items_estado[name]=status;if(status==='obs'&&obs)currentPVSO.items_obs[name]=obs;else if(status==='ok')delete currentPVSO.items_obs[name];const accionItem=status==='ok'?`Ítem aprobado: ${name}`:`Observación en ítem: ${name}${obs?' — '+obs:''}`;guardarCambiosPVSO(currentPVSO.id,{items_estado:currentPVSO.items_estado,items_obs:currentPVSO.items_obs},accionItem);notif(status==='ok'?`✓ ${name} aprobado`:`⚠ Observación: ${name}`);renderDetail();document.getElementById('ib-'+idx)?.classList.add('open');}
+function aprobarTodos(){Object.keys(currentPVSO.items_estado).forEach(k=>{currentPVSO.items_estado[k]='ok';delete currentPVSO.items_obs[k];});const esAMA=currentPVSO.tipo_clasificacion==='AMA';currentPVSO.estado='APROBADO_SLA';const accionAT='Todos los ítems aprobados por SLA.'+(esAMA?' Gestor SMS notificado para Matriz HIRA.':'');guardarCambiosPVSO(currentPVSO.id,{items_estado:currentPVSO.items_estado,items_obs:currentPVSO.items_obs,estado:currentPVSO.estado},accionAT);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionAT,usuario:currentUser.nombre+' (SLA)'});notif('✓ Todos los ítems aprobados');updateStats();renderMatrizTab();renderDetail();}
+function enviarObs(){const hasObs=Object.entries(currentPVSO.items_estado).some(([name,s])=>s==='obs'&&currentPVSO.items_obs[name]);if(!hasObs){notif('⚠ Los ítems observados deben tener texto de observación. Revísalos arriba.');return;}currentPVSO.estado='CON_OBSERVACIONES';const accionEO='Observaciones enviadas al contratista por correo';guardarCambiosPVSO(currentPVSO.id,{items_estado:currentPVSO.items_estado,items_obs:currentPVSO.items_obs,estado:currentPVSO.estado},accionEO);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionEO,usuario:currentUser.nombre+' (SLA)'});notif('⚠ Observaciones enviadas al contratista',3000);updateStats();renderDetail();}
+function enviarMatriz(esExcepcionSLA){const f=document.getElementById('f-mat');if(!f?.files.length){notif('Adjunta la Matriz HIRA');return;}if(esExcepcionSLA){const confirma=confirm('Estás por aprobar la Matriz HIRA como Supervisor de Lado Aire, en ausencia del Jefe SMS y del Asistente SMS.\n\n¿Confirmas que ambos no están disponibles y asumes la aprobación?');if(!confirma)return;}const rolLabel=currentUser.rol==='sla'?'SLA':currentUser.rol==='asistente'?'Asistente SMS':'Gestor SMS';currentPVSO.estado='PENDIENTE_DGAC';const accionEM=esExcepcionSLA?'Matriz HIRA adjuntada y aprobada por el SLA (excepción: Jefe/Asistente SMS no disponibles).':'Matriz HIRA adjuntada. SLA notificado para remisión a DGAC.';guardarCambiosPVSO(currentPVSO.id,{estado:currentPVSO.estado,matriz_adjunto:f.files[0].name},accionEM);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionEM,usuario:currentUser.nombre+' ('+rolLabel+')'});notif('✓ Matriz enviada.',3000);updateStats();renderDetail();}
+function marcarDGAC(){const f=document.getElementById('f-dgac');if(!f?.files.length){notif('Adjunta el PDF de respuesta DGAC');return;}currentPVSO.estado='APROBADO_DGAC';const accionDG='Aprobación DGAC registrada.';guardarCambiosPVSO(currentPVSO.id,{estado:currentPVSO.estado,dgac_adjunto:f.files[0].name},accionDG);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionDG,usuario:currentUser.nombre+' (SLA)'});notif('✓ DGAC aprobado.',3000);updateStats();renderDetail();}
+function registrarNOTAM(){const n=document.getElementById('notam-n')?.value.trim();const f=document.getElementById('notam-f')?.value;if(!n||!f){notif('Ingresa número y fecha del NOTAM');return;}currentPVSO.notam_num=n;currentPVSO.estado='NOTAM_PUBLICADO';const accionNT=`NOTAM ${n} publicado. Fecha: ${f}.`;guardarCambiosPVSO(currentPVSO.id,{estado:currentPVSO.estado,codigo_notam:n,fecha_notam:f},accionNT);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionNT,usuario:currentUser.nombre+' (SLA)'});notif(`✓ NOTAM ${n} registrado`,3000);updateStats();renderDetail();}
+function validarPVSO(){const c=document.getElementById('cod-int')?.value.trim();if(!c){notif('Ingresa el código interno');return;}currentPVSO.codigo_interno=c;currentPVSO.estado='PVSO_VALIDADO';const fiConf=document.getElementById('fi-conf')?.value||'';const fsConf=document.getElementById('fs-conf')?.value||'';const obsFin=document.getElementById('obs-fin')?.value||'';const accionVP=`PVSO validado. Código: ${c}. Documentos generados y enviados.`;guardarCambiosPVSO(currentPVSO.id,{estado:currentPVSO.estado,codigo_interno:c,fecha_ingreso_confirmada:fiConf,fecha_salida_confirmada:fsConf,obs_finales:obsFin},accionVP);currentPVSO.historial.push({fecha:new Date().toISOString(),accion:accionVP,usuario:currentUser.nombre+' (SLA)'});notif('✓ PVSO validado. Documentos generados.',4000);updateStats();renderDetail();}
+function showFN(input,id){const el=document.getElementById(id);if(input.files&&input.files[0])el.textContent='✓ '+input.files[0].name;}
+function excelDateToStr(val) {
+  if (!val || val === '—') return '—';
+  // Si es número serial de Excel (días desde 1900-01-01)
+  if (typeof val === 'number' || (!isNaN(val) && val > 40000)) {
+    const d = new Date((parseFloat(val) - 25569) * 86400 * 1000);
+    return d.toLocaleString('es-PE', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+  return val;
+}
+
+function renderAdjuntosData(el, data, append) {
+  const adjNames = {
+    cronograma: 'Cronograma de actividades',
+    plano_cercamiento: 'Plano / croquis de cercamiento',
+    carta_c: 'Carta C — Facilidades personales',
+    carta_g: 'Carta G — Facilidades vehiculares',
+    carta_i: 'Carta I — Facilidades de equipos / insumos',
+  };
+  let html = '';
+  data.forEach(adj => {
+    if (adj.codigo_pvso) {
+      html += `<div style="font-size:11px;color:var(--g400);margin:8px 0 4px;text-transform:uppercase">Código: ${adj.codigo_pvso} · ${new Date(adj.timestamp).toLocaleString('es-PE')}</div>`;
+    }
+    Object.entries(adjNames).forEach(([key, label]) => {
+      const url = adj[key];
+      if (url && url.toString().startsWith('http')) {
+        html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--g100)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span style="flex:1;font-size:13px;color:var(--g900)">${label}</span>
+          <a href="${url}" target="_blank" style="font-size:12px;color:var(--blue-mid);font-weight:500;text-decoration:none;padding:4px 10px;border:.5px solid var(--blue-mid);border-radius:var(--r)">↗ Abrir en Drive</a>
+        </div>`;
+      }
+    });
+  });
+  if (append) { el.innerHTML += html; } else { el.innerHTML = html || '<p style="font-size:13px;color:var(--g400)">No hay adjuntos registrados aún.</p>'; }
+}
+
+function poblarAdjuntosEnItems(dataArr) {
+  if (!dataArr || !dataArr.length) return;
+  Object.entries(ITEM_ADJ_MAP).forEach(([itemName, adjKeys]) => {
+    const idx = ITEM_IDX[itemName];
+    const slot = document.getElementById('adj-slot-' + idx);
+    if (!slot) return;
+    let html = '';
+    adjKeys.forEach(adjKey => {
+      // Tomar la coincidencia MÁS RECIENTE (por si el contratista volvió a subir un archivo corregido)
+      const candidatos = dataArr.filter(a => a[adjKey] && a[adjKey].toString().startsWith('http'));
+      const match = candidatos.length
+        ? candidatos.slice().sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0)).pop()
+        : null;
+      if (!match) return;
+      const label = ITEM_ADJ_LABEL[adjKey] || 'Adjunto';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;margin-top:8px;background:var(--g50,#f7f7f5);border:.5px solid var(--g100);border-radius:var(--r)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A32D2D" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span style="flex:1;font-size:12px;color:var(--g900)">📎 ${label} adjuntado por el contratista</span>
+        <a href="${match[adjKey]}" target="_blank" style="font-size:11px;color:var(--blue-mid);font-weight:500;text-decoration:none;padding:3px 8px;border:.5px solid var(--blue-mid);border-radius:var(--r)">↗ Abrir</a>
+      </div>`;
+    });
+    if (html) slot.innerHTML = html;
+  });
+}
+
+function renderAdjuntos(p) {
+  // Mostrar placeholder mientras carga
+  const containerId = 'adjuntos-panel-' + p.id;
+  // Cargar adjuntos desde la API (hoja Adjuntos del Sheet)
+  // Buscar por ID exacto primero, si no hay resultados mostrar todos
+  const searchId = encodeURIComponent(p.id);
+  fetch(API_URL + '?action=listarAdjuntos&pvso_id=' + searchId)
+    .then(r => r.json())
+    .then(json => {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      if (!json.ok || !json.data || !json.data.length) {
+        // Mostrar todos los adjuntos disponibles con nota explicativa
+        return fetch(API_URL + '?action=listarAdjuntos&pvso_id=todos')
+          .then(r2 => r2.json())
+          .then(json2 => {
+            if (!json2.ok || !json2.data || !json2.data.length) {
+              el.innerHTML = '<p style="font-size:13px;color:var(--g400)">No hay adjuntos registrados aún. El contratista los adjuntará usando el enlace enviado por correo al recibir su código PVSO.</p>';
+              return;
+            }
+            // Filtrar por email del contratista si coincide
+            const byEmail = json2.data.filter(a => a.email && p.email && a.email.toString().trim().toLowerCase() === p.email.toString().trim().toLowerCase());
+            // Si no hay por email, mostrar los más recientes (últimos 5)
+            const toShow = byEmail.length ? byEmail : json2.data.slice(0, 5);
+            const nota = byEmail.length ? '' : '<div style="font-size:11px;color:var(--warning);background:var(--warning-bg);padding:6px 10px;border-radius:var(--r);margin-bottom:8px">⚠ No se encontraron adjuntos con el código exacto de este PVSO. Se muestran los adjuntos más recientes del sistema.</div>';
+            el.innerHTML = nota;
+            renderAdjuntosData(el, toShow, true);
+            poblarAdjuntosEnItems(toShow);
+          });
+      }
+      renderAdjuntosData(el, json.data);
+      poblarAdjuntosEnItems(json.data);
+    })
+    .catch(() => {
+      const el = document.getElementById(containerId);
+      if (el) el.innerHTML = '<p style="font-size:13px;color:var(--g400)">No se pudieron cargar los adjuntos.</p>';
+    });
+  return '<p style="font-size:13px;color:var(--g400)">Cargando adjuntos...</p>';
+}
+
+function initDetailMapRutas(p) {
+  const mapId = 'detail-map-rutas-' + p.id;
+  const container = document.getElementById(mapId);
+  if (!container) return;
+
+  let rutaPoints = [];
+  try {
+    rutaPoints = typeof p.ruta_puntos === 'string' ? JSON.parse(p.ruta_puntos) : (p.ruta_puntos || []);
+  } catch(e) { rutaPoints = []; }
+
+  const center = rutaPoints.length > 0 ? rutaPoints[0] : [-16.3388, -71.5680];
+  const detailMap = L.map(mapId, {center: center, zoom: 15, attributionControl: false, zoomControl: true});
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {maxZoom:19}).addTo(detailMap);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {maxZoom:19, opacity:0.5}).addTo(detailMap);
+
+  // Dibujar zonas críticas de referencia
+  if (typeof ZONES !== 'undefined') {
+    ZONES.filter(z => z.cls === 'crit').forEach(z => {
+      L.polygon(z.coords, {color: z.color, fillColor: z.color, fillOpacity: 0.2, weight: 1.5}).addTo(detailMap);
+    });
+  }
+
+  // Dibujar ruta del contratista
+  if (rutaPoints.length > 0) {
+    rutaPoints.forEach((pt, i) => {
+      L.circleMarker(pt, {radius: 5, color: '#185FA5', fillColor: '#185FA5', fillOpacity: 1, weight: 2})
+        .bindTooltip(String(i+1), {permanent: true, direction: 'right', className: '', opacity: 1})
+        .addTo(detailMap);
+    });
+    if (rutaPoints.length > 1) {
+      L.polyline(rutaPoints, {color: '#185FA5', weight: 3, dashArray: '8,4'}).addTo(detailMap);
+      detailMap.fitBounds(L.polyline(rutaPoints).getBounds(), {padding: [20, 20]});
+    }
+  } else {
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--g400);font-size:13px">El contratista no trazó una ruta en el mapa</div>';
+  }
+}
+
+const SEDE_INFO = {
+  AQP: { nombre: 'Aeropuerto Internacional "Alfredo Rodríguez Ballón"', iata: 'AQP', oaci: 'SPQU' },
+  AYP: { nombre: 'Aeropuerto "Coronel FAP Alfredo Mendívil Duarte"', iata: 'AYP', oaci: 'SPHO' },
+  JUL: { nombre: 'Aeropuerto Internacional "Inca Manco Cápac"', iata: 'JUL', oaci: 'SPJL' },
+  PEM: { nombre: 'Aeropuerto Internacional "Padre Aldamiz"', iata: 'PEM', oaci: 'SPTU' },
+  TCQ: { nombre: 'Aeropuerto Internacional "Coronel FAP Carlos Ciriani Santa Rosa"', iata: 'TCQ', oaci: 'SPTN' },
+};
+
+function verMatrizDocumento(pvsoId) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p) return;
+  let matriz = null;
+  try { matriz = JSON.parse(p.matriz_adjunto); } catch(e) {}
+  if (!matriz || !matriz.peligros) { notif('No se encontró la matriz para este PVSO'); return; }
+  const info = SEDE_INFO[p.sede] || { nombre: p.sede || '—', iata: p.sede || '—', oaci: '—' };
+  const actividad = p.objeto || p.tipo_actividad || '—';
+  const filasHtml = matriz.peligros.map(r => {
+    const tolIni = calcularTolerabilidad(r.prob, r.sev);
+    const tolRes = calcularTolerabilidad(r.probResidual, r.sevResidual);
+    return `
+    <tr>
+      <td>${r.id||''}</td>
+      <td>${escHtml(r.peligro)}<br/><em style="color:#666;font-size:11px">→ ${escHtml(r.consecuencia)}</em></td>
+      <td style="text-align:center;font-weight:600">${tolIni.idx}<br/>${tolIni.tol}</td>
+      <td>${escHtml(r.medidas_control)}</td>
+      <td style="text-align:center;font-weight:600">${tolRes.idx}<br/>${tolRes.tol}<br/><span style="font-size:10px;color:#666;font-weight:400">${escHtml(r.responsable)}</span></td>
+    </tr>`;
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Matriz HIRA — ${p.id}</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:24px;color:#1c1c1a;}
+    h1{font-size:16px;margin-bottom:12px;text-align:center;}
+    table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:16px;} th,td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;}
+    th{background:#0D3B6E;color:white;font-size:10px;text-transform:uppercase;}
+    .concl{margin-top:16px;padding:10px;background:#f7f6f3;border-radius:4px;font-size:12px;}
+    .header-tbl td{font-size:12px;padding:5px 10px;}
+    .header-tbl td.lbl{font-weight:600;background:#f7f6f3;width:180px;}
+    .firma{margin-top:32px;text-align:center;font-size:12px;}
+    .firma-linea{border-top:1px solid #333;width:280px;margin:40px auto 6px;}
+    @media print{ .no-print{display:none;} }
+  </style></head><body>
+  <button class="no-print" onclick="window.print()" style="margin-bottom:16px;padding:8px 16px;">🖨 Imprimir / Guardar como PDF</button>
+  <h1>Matriz HIRA — Identificación de Peligros y Evaluación de Riesgos de Seguridad Operacional</h1>
+  <table class="header-tbl">
+    <tr><td class="lbl">Nombre del aeropuerto:</td><td>${escHtml(info.nombre)}</td></tr>
+    <tr><td class="lbl">Sigla de identificación:</td><td>IATA: <strong>${info.iata}</strong> &nbsp;&nbsp; OACI: <strong>${info.oaci}</strong></td></tr>
+    <tr><td class="lbl">Fecha de identificación:</td><td>${escHtml(matriz.fecha_identificacion || '—')}</td></tr>
+    <tr><td class="lbl">Actividad:</td><td>${escHtml(actividad)}</td></tr>
+    <tr><td class="lbl">Código:</td><td><strong>${escHtml(matriz.codigo || '—')}</strong></td></tr>
+  </table>
+  <table><thead><tr><th>ID</th><th>Peligro / Consecuencia</th><th>Riesgo inicial</th><th>Medidas de control</th><th>Riesgo residual / Resp.</th></tr></thead>
+  <tbody>${filasHtml}</tbody></table>
+  <div class="concl"><strong>Conclusión:</strong> ${escHtml(matriz.conclusion||'')}</div>
+  <div class="firma">
+    <div class="firma-linea"></div>
+    Validado por: <strong>${escHtml(matriz.validado_por || '—')}</strong>
+  </div>
+  </body></html>`);
+  win.document.close();
+}
+
+function escHtml(str){return String(str==null?'':str).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+
+function renderFilasMatrizEditable(pvsoId) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return '';
+  return p.matriz_ia.peligros.map((r, i) => {
+    const tolIni = calcularTolerabilidad(r.prob, r.sev);
+    const tolRes = calcularTolerabilidad(r.probResidual, r.sevResidual);
+    return `
+    <div class="riesgo-row">
+      <div>
+        <textarea class="mat-edit-txt" rows="2" onblur="editarCampoMatriz('${pvsoId}',${i},'peligro',this.value)">${escHtml(r.peligro)}</textarea>
+        <textarea class="mat-edit-txt" rows="2" style="margin-top:4px;font-size:11px;color:var(--g600)" placeholder="Consecuencia" onblur="editarCampoMatriz('${pvsoId}',${i},'consecuencia',this.value)">${escHtml(r.consecuencia)}</textarea>
+      </div>
+      <div>
+        <select class="mat-edit-sel" onchange="editarCampoMatriz('${pvsoId}',${i},'prob',parseInt(this.value))">
+          ${PROBABILIDADES.map(o=>`<option value="${o.v}" ${r.prob===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+        <select class="mat-edit-sel" style="margin-top:4px" onchange="editarCampoMatriz('${pvsoId}',${i},'sev',this.value)">
+          ${SEVERIDADES.map(o=>`<option value="${o.v}" ${r.sev===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+        <div style="margin-top:5px;text-align:center"><span class="nivel-badge ${tolIni.cls}">${tolIni.idx} · ${tolIni.tol}</span></div>
+      </div>
+      <div>
+        <textarea class="mat-edit-txt" rows="3" onblur="editarCampoMatriz('${pvsoId}',${i},'medidas_control',this.value)">${escHtml(r.medidas_control)}</textarea>
+      </div>
+      <div>
+        <select class="mat-edit-sel" onchange="editarCampoMatriz('${pvsoId}',${i},'probResidual',parseInt(this.value))">
+          ${PROBABILIDADES.map(o=>`<option value="${o.v}" ${r.probResidual===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+        <select class="mat-edit-sel" style="margin-top:4px" onchange="editarCampoMatriz('${pvsoId}',${i},'sevResidual',this.value)">
+          ${SEVERIDADES.map(o=>`<option value="${o.v}" ${r.sevResidual===o.v?'selected':''}>${o.l}</option>`).join('')}
+        </select>
+        <div style="margin:5px 0;text-align:center"><span class="nivel-badge ${tolRes.cls}">${tolRes.idx} · ${tolRes.tol}</span></div>
+        <input class="mat-edit-txt" style="font-size:11px" value="${escHtml(r.responsable)}" placeholder="Responsable" onblur="editarCampoMatriz('${pvsoId}',${i},'responsable',this.value)"/>
+        <button class="btn-elim-fila" onclick="eliminarPeligro('${pvsoId}',${i})" title="Eliminar este peligro">✕ Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editarCampoMatriz(pvsoId, idx, campo, valor) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia || !p.matriz_ia.peligros[idx]) return;
+  p.matriz_ia.peligros[idx][campo] = valor;
+  if (currentPVSO && currentPVSO.id === pvsoId) currentPVSO.matriz_ia = p.matriz_ia;
+  // Refrescar solo si cambió prob/sev (para actualizar el badge de tolerabilidad)
+  if (['prob','sev','probResidual','sevResidual'].includes(campo)) {
+    const cont = document.getElementById('filas-matriz-' + pvsoId);
+    if (cont) cont.innerHTML = renderFilasMatrizEditable(pvsoId);
+  }
+}
+
+function agregarPeligro(pvsoId) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return;
+  const n = p.matriz_ia.peligros.length + 1;
+  p.matriz_ia.peligros.push({
+    id: 'P' + String(n).padStart(2,'0'), peligro: '', consecuencia: '',
+    prob: 3, sev: 'C', probResidual: 1, sevResidual: 'D',
+    medidas_control: '', responsable: ''
+  });
+  const cont = document.getElementById('filas-matriz-' + pvsoId);
+  if (cont) cont.innerHTML = renderFilasMatrizEditable(pvsoId);
+}
+
+function eliminarPeligro(pvsoId, idx) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return;
+  if (p.matriz_ia.peligros.length <= 1) { notif('Debe quedar al menos un peligro en la matriz'); return; }
+  p.matriz_ia.peligros.splice(idx, 1);
+  const cont = document.getElementById('filas-matriz-' + pvsoId);
+  if (cont) cont.innerHTML = renderFilasMatrizEditable(pvsoId);
+}
+
+// ─── Matriz de riesgos SMS — Doc 9859 OACI ───────────────────────────────
+const SEVERIDADES = [
+  {v:'A',l:'A · Catastrófico'}, {v:'B',l:'B · Peligroso'}, {v:'C',l:'C · Importante'},
+  {v:'D',l:'D · Leve'}, {v:'E',l:'E · Insignificante'}
+];
+const PROBABILIDADES = [
+  {v:5,l:'5 · Frecuente'}, {v:4,l:'4 · Ocasional'}, {v:3,l:'3 · Remoto'},
+  {v:2,l:'2 · Improbable'}, {v:1,l:'1 · Sumamente improbable'}
+];
+// Tabla de tolerabilidad — Doc 9859 OACI
+const INTOLERABLE_SET = new Set(['5A','5B','5C','4A','4B','3A']);
+const TOLERABLE_SET = new Set(['5D','5E','4C','4D','4E','3B','3C','3D','2A','2B','2C']);
+function calcularTolerabilidad(prob, sev) {
+  const idx = String(prob) + sev;
+  if (INTOLERABLE_SET.has(idx)) return { idx, tol: 'Intolerable', cls: 'nivel-alto' };
+  if (TOLERABLE_SET.has(idx)) return { idx, tol: 'Tolerable', cls: 'nivel-medio' };
+  return { idx, tol: 'Aceptable', cls: 'nivel-bajo' };
+}
+// Traduce los términos antiguos (libres) de la base de peligros a la escala oficial 1-5 / A-E
+function traducirProbVieja(p) { return {Alta:4, Media:3, Baja:2}[p] || 3; }
+function traducirSevVieja(s) { return {Catastrófico:'A', Peligroso:'B', Mayor:'C', Menor:'D'}[s] || 'C'; }
+
+function renderResultadoMatriz(pvsoId, zona) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return '';
+  const rol = currentUser.rol;
+  const pendienteValidacion = p.estado === 'MATRIZ_PENDIENTE_VALIDACION';
+
+  let accionesHtml = '';
+  if (rol === 'sla') {
+    if (pendienteValidacion) {
+      accionesHtml = `
+        <div style="font-size:12px;color:var(--warning,#854F0B);background:var(--warning-bg,#FAEEDA);border:.5px solid var(--warning-border,#EF9F27);border-radius:var(--r);padding:.6rem .8rem;margin-bottom:.75rem">
+          📨 Solicitud de validación enviada al Jefe/Asistente SMS. Puedes seguir ajustando la matriz mientras esperas.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-regenerar" onclick="solicitarValidacionMatriz('${pvsoId}')">📨 Reenviar solicitud de validación</button>
+          <button class="btn-aprobar-matriz" style="background:var(--red)" onclick="aprobarMatrizIA('${pvsoId}',true)">⚠ Aprobar como SLA (Jefe/Asistente SMS no disponible)</button>
+        </div>`;
+    } else {
+      accionesHtml = `
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn-aprobar-matriz" onclick="solicitarValidacionMatriz('${pvsoId}')">📨 Solicitar validación a Jefe/Asistente SMS</button>
+          <button class="btn-aprobar-matriz" style="background:var(--red)" onclick="aprobarMatrizIA('${pvsoId}',true)">⚠ Aprobar como SLA (Jefe/Asistente SMS no disponible)</button>
+        </div>`;
+    }
+  } else {
+    // Gestor / Asistente SMS
+    accionesHtml = `
+      ${pendienteValidacion ? `<div style="font-size:12px;color:var(--blue-mid);background:var(--blue-light);border:.5px solid var(--blue-mid);border-radius:var(--r);padding:.6rem .8rem;margin-bottom:.75rem">Esta matriz fue preparada por el SLA y está pendiente de tu validación.</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-aprobar-matriz" onclick="aprobarMatrizIA('${pvsoId}',false)">✓ Aprobar Matriz y continuar</button>
+        <button class="btn-regenerar" onclick="generarMatrizIA('${pvsoId}')">↺ Regenerar desde cero</button>
+      </div>`;
+  }
+
+  return `
+    <h4>Matriz HIRA ${zona?'— '+new Date().toLocaleString('es-PE'):''}</h4>
+    <p style="font-size:11px;color:var(--g400);margin-bottom:.75rem">Zona: ${zona||p.zona||'—'} · Actividad: ${p.tipo_actividad||'—'} · Personal: ${p.num_personal||'—'} personas</p>
+    <div style="font-size:11px;color:var(--g600);background:var(--blue-light);border:.5px solid var(--blue-mid);border-radius:var(--r);padding:.5rem .75rem;margin-bottom:.75rem">
+      ✎ Puedes editar cualquier campo, cambiar el nivel de riesgo, agregar o eliminar peligros antes de aprobar. Los cambios se guardan automáticamente al salir de cada campo.
+    </div>
+    <div class="riesgo-row riesgo-header">
+      <div>Peligro / Consecuencia</div><div>Riesgo inicial</div>
+      <div>Medidas de control</div><div>Riesgo residual / Resp.</div>
+    </div>
+    <div id="filas-matriz-${pvsoId}">${renderFilasMatrizEditable(pvsoId)}</div>
+    <button class="btn-regenerar" style="margin-top:.5rem" onclick="agregarPeligro('${pvsoId}')">+ Agregar peligro</button>
+    <div style="margin-top:1rem;padding:.75rem;background:var(--g50);border-radius:var(--r);font-size:12px;color:var(--g600);line-height:1.5">
+      <strong>Conclusión:</strong> ${p.matriz_ia.conclusion}
+    </div>
+    <div style="margin-top:1rem">${accionesHtml}</div>`;
+}
+
+function solicitarValidacionMatriz(pvsoId) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return;
+  p.estado = 'MATRIZ_PENDIENTE_VALIDACION';
+  p.historial = p.historial || [];
+  const accionSV = 'SLA generó/editó la Matriz HIRA y solicitó validación al Jefe/Asistente SMS.';
+  p.historial.push({ fecha: new Date().toISOString(), accion: accionSV, usuario: currentUser.nombre + ' (SLA)' });
+  guardarCambiosPVSO(pvsoId, { estado: p.estado, matriz_adjunto: JSON.stringify(p.matriz_ia) }, accionSV);
+  notif('📨 Solicitud de validación enviada', 3000);
+  updateStats();
+  renderDetail();
+}
+
+function generarMatrizIA(pvsoId) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p) return;
+
+  const btn = document.getElementById('btn-gen-' + pvsoId);
+  const loading = document.getElementById('loading-' + pvsoId);
+  const resultado = document.getElementById('resultado-' + pvsoId);
+
+  btn.disabled = true;
+  loading.style.display = 'flex';
+  resultado.style.display = 'none';
+
+  // Biblioteca de peligros por zona y tipo de actividad
+  const PELIGROS_BASE = {
+    'RWY': [
+      {peligro:'Incursión en pista por personal o equipo sin autorización TWR',consecuencia:'Colisión con aeronave en despegue o aterrizaje — accidente catastrófico',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Coordinación permanente con TWR antes y durante cada ingreso a pista, vigía con radio VHF en acceso, señal de espera activa, nunca ingresar sin clearance explícito de TWR',responsable:'SLA / TWR',nivel_residual:'Bajo'},
+      {peligro:'Impacto de FOD (debris, herramientas, materiales) sobre aeronaves',consecuencia:'Daño estructural a aeronave, ingesta en motores — AOG o accidente',probabilidad:'Alta',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Inspección FOD antes y después de cada jornada, contenedores cerrados para residuos, barrido continuo del área, registro fotográfico, check FOD al ingreso y salida de cada vehículo',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Señalización inadecuada o insuficiente del área de trabajo en pista',consecuencia:'Confusión de pilotos sobre disponibilidad de pista, incursión inadvertida',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'NOTAM emitido previo al inicio con referencia a área afectada, tableros de pista cerrada en umbrales, conos reflectivos cada 3m, señalización nocturna con balizas rojas, reporte de apertura y cierre de pista a TWR',responsable:'SLA / AIS-CORPAC',nivel_residual:'Bajo'},
+      {peligro:'Interferencia con sistemas de ayuda a la navegación (ILS, PAPI, balizas)',consecuencia:'Degradación de categoría operacional del aeródromo, vuelos desviados',probabilidad:'Baja',severidad:'Peligroso',nivel_riesgo:'Medio',medidas_control:'Verificar áreas de protección ILS antes de instalar equipos o estructuras, no elevar maquinaria en área crítica ILS sin autorización AIS, coordinar con CORPAC para verificación de calibración post-obra',responsable:'SLA / AIS-CORPAC',nivel_residual:'Bajo'},
+      {peligro:'Movimiento de equipos o maquinaria en pista sin guía visual',consecuencia:'Desvío de maquinaria fuera del área autorizada, conflicto con áreas operativas',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Vigía acompañando a cada vehículo en pista, ruta de desplazamiento definida y marcada, prohibición de reversas sin guía, velocidad máx. 15km/h en pista',responsable:'RESO-AAP / Contratista',nivel_residual:'Bajo'},
+      {peligro:'Trabajo nocturno o en condiciones de visibilidad reducida en pista',consecuencia:'Baja visibilidad para aeronaves, mayor probabilidad de incidentes',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Iluminación artificial del área de trabajo, chalecos reflectivos clase 2 obligatorios, balizas en todos los equipos, suspender actividad si visibilidad < 200m, coordinación con TWR para restricciones',responsable:'SLA / Contratista',nivel_residual:'Bajo'},
+      {peligro:'Contaminación del pavimento de pista (aceite, combustible, concreto)',consecuencia:'Reducción de fricción, riesgo de accidente en despegue/aterrizaje',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Inspección de equipos antes del ingreso (fugas), kit antiderrame disponible, limpieza inmediata ante cualquier derrame, reporte a SLA y solicitud de medición de fricción post-obra',responsable:'Contratista / Mantenimiento',nivel_residual:'Bajo'},
+      {peligro:'Cierre parcial de pista sin coordinación con ATC y aerolíneas',consecuencia:'Pérdida de capacidad operacional, impacto en itinerario de vuelos',probabilidad:'Baja',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Planificar cierres de pista con mínimo 15 días de anticipación, publicar NOTAM con suficiente antelación, coordinar con aerolíneas operadoras, definir horarios de trabajo en ventanas de baja operación',responsable:'SLA / Administración AAP',nivel_residual:'Bajo'},
+    ],
+    'TWY': [
+      {peligro:'Vehículo o maquinaria de obra en calle de rodaje sin clearance de TWR',consecuencia:'Conflicto con aeronave en rodaje — colisión en superficie',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Autorización TWR antes de cada ingreso a calle de rodaje, radio VHF activo, vigía en acceso, nunca bloquear calle de rodaje ante aeronave en movimiento',responsable:'SLA / TWR',nivel_residual:'Bajo'},
+      {peligro:'FOD generado por actividad de mantenimiento en calle de rodaje',consecuencia:'Daño en tren de aterrizaje, ingesta en motores durante rodaje',probabilidad:'Alta',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Inspección FOD antes y después de jornada, uso de lonas para contener residuos bajo equipos, barrido con imán de ser posible, contenedores cerrados, check de herramientas al ingreso y salida',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Señalización insuficiente de cierre de calle de rodaje',consecuencia:'Confusión de pilotos sobre disponibilidad de calle, rodaje en área de obra',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Tableros de calle cerrada en ambos extremos, conos reflectivos cada 3m, NOTAM publicado, coordinar señal X en calle con AIS si aplica, informar a TWR inicio y fin de trabajos',responsable:'SLA',nivel_residual:'Bajo'},
+      {peligro:'Equipo de altura excede límite bajo PLBs en vía vehicular frente a plataforma',consecuencia:'Colisión de maquinaria con pasarela de embarque, daño estructural a PLB',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Verificar altura de todos los equipos antes de transitar bajo PLBs (máx. 3.50m en AQP), marcar ruta alternativa si equipo supera la medida, acompañamiento de vigía al transitar',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Derrame de combustible o fluidos de maquinaria en pavimento de TWY',consecuencia:'Contaminación de pavimento, reducción de fricción, riesgo de incendio',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Inspección de equipos antes del ingreso, bandeja de contención bajo equipos estacionados, kit antiderrame disponible, reporte inmediato a SLA ante cualquier derrame',responsable:'Contratista',nivel_residual:'Bajo'},
+      {peligro:'Trabajo simultáneo con operaciones continuas de aeronaves en rodaje',consecuencia:'Distracción de tripulaciones, conflicto de tráfico en superficie',probabilidad:'Alta',severidad:'Mayor',nivel_riesgo:'Alto',medidas_control:'Coordinar ventanas de trabajo con TWR en períodos de baja operación, parar toda actividad ante presencia de aeronave en rodaje, mantener comunicación permanente con TWR durante jornada',responsable:'SLA / TWR',nivel_residual:'Bajo'},
+      {peligro:'Vibración excesiva de maquinaria afecta infraestructura de calle de rodaje',consecuencia:'Daño a pavimento, juntas o sistemas subterráneos (cableado, drenajes)',probabilidad:'Baja',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Evaluación previa de cargas de maquinaria vs. capacidad del pavimento, restricción de velocidad de equipos, inspección post-actividad de pavimento y marcas',responsable:'Contratista / Mantenimiento',nivel_residual:'Bajo'},
+      {peligro:'Personal peatonal en calle de rodaje sin acompañamiento',consecuencia:'Atropello por aeronave en rodaje o vehículo de obra',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Prohibición de peatones solos en calle de rodaje, acompañamiento de RESO-AAP en todo momento, chaleco reflectivo y radio obligatorios, mantenerse en área delimitada por señalización',responsable:'RESO-AAP',nivel_residual:'Bajo'},
+    ],
+    'Plataforma PEAs': [
+      {peligro:'Colisión de vehículo de obra con aeronave estacionada en PEA adyacente',consecuencia:'Daño estructural severo a aeronave, paralización de operaciones, pérdida económica',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Señalizar con conos los PEAs adyacentes como zona protegida, vigía permanente supervisando movimientos de vehículos, velocidad máx. 10km/h en plataforma, nunca superar línea ABL',responsable:'RESO-AAP / Contratista',nivel_residual:'Bajo'},
+      {peligro:'Ingesta de FOD en motores de aeronaves estacionadas o en movimiento en plataforma',consecuencia:'Daño severo a motor, AOG de aeronave, pérdida de vidas',probabilidad:'Alta',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Inspección FOD antes del inicio y al término de cada jornada, contenedores cerrados para todos los residuos, prohibición de materiales sueltos en plataforma, uso de lonas de contención bajo área de trabajo',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Interferencia con operaciones de despacho en PEAs adyacentes',consecuencia:'Retraso operacional de aerolíneas, conflicto con GSE y personal de handling',probabilidad:'Alta',severidad:'Menor',nivel_riesgo:'Medio',medidas_control:'Coordinar horario de trabajo con Jefe de Plataforma y aerolíneas, demarcar área claramente con conos y cinta, comunicar inicio y fin a operaciones, respetar franjas operacionales de aerolíneas',responsable:'SLA / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Exposición de personal a chorro de motores (jet blast) en plataforma',consecuencia:'Lesiones graves a personal, daño a equipos de obra ligeros',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Mantener distancias de seguridad de motores en marcha (min. 50m detrás del avión), señal de alerta ante encendido de motores, detener toda actividad durante push-back o arranque de motores',responsable:'RESO-AAP / Contratista',nivel_residual:'Bajo'},
+      {peligro:'Movimiento inadvertido de equipo bajo aleta o nariz de aeronave',consecuencia:'Daño estructural a aeronave, daño al equipo de obra',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Verificar distancias de separación con aeronave antes de mover cualquier equipo, vigía supervisando movimientos, no dejar equipos bajo partes de aeronave',responsable:'RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Daño a sistemas de demarcación de plataforma (líneas ERA, ABL, EPL)',consecuencia:'Desorientación de pilotos y conductores en plataforma, incidentes de superficie',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Proteger marcas de plataforma con planchas o cinta antes de trabajar sobre ellas, repintar marcas afectadas al término de la obra, inspección post-actividad con registro fotográfico',responsable:'Contratista / Mantenimiento',nivel_residual:'Bajo'},
+      {peligro:'Caída de herramientas o materiales desde altura sobre aeronaves o personal',consecuencia:'Daño a aeronave, lesiones graves a personal en plataforma',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Uso de arnés y línea de vida en trabajos en altura, herramientas con cordón de seguridad, malla de protección bajo área de trabajo en altura, zona de exclusión delimitada bajo el área',responsable:'Contratista',nivel_residual:'Bajo'},
+    ],
+    'SEI': [
+      {peligro:'Bloqueo de acceso o salida de vehículos SEI durante emergencia',consecuencia:'Demora en respuesta a emergencia, reducción de categoría OACI, suspensión de operaciones',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Coordinar con Jefe SEI antes del inicio de cualquier actividad, garantizar acceso libre permanente (min. 6m de ancho), no estacionar equipos en vías de acceso SEI bajo ninguna circunstancia, plan de evacuación inmediata de área de trabajo',responsable:'SLA / Jefe SEI',nivel_residual:'Bajo'},
+      {peligro:'Interferencia con sistemas de comunicación o alarma del SEI',consecuencia:'Falla en activación de respuesta a emergencia aeroportuaria',probabilidad:'Baja',severidad:'Catastrófico',nivel_riesgo:'Medio',medidas_control:'Identificar y proteger sistemas de comunicación y alarma antes de iniciar, coordinación con Jefe SEI para verificación post-actividad de sistemas',responsable:'Contratista / Jefe SEI',nivel_residual:'Bajo'},
+      {peligro:'Derrame de agente extintor o contaminación de equipos SEI durante mantenimiento',consecuencia:'Reducción de disponibilidad operacional de vehículos SEI',probabilidad:'Baja',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Uso de bandejas de contención, kit antiderrame disponible, no acceder al interior de vehículos SEI sin autorización del Jefe SEI',responsable:'Contratista',nivel_residual:'Bajo'},
+      {peligro:'Generación de polvo o residuos que contaminen equipos SEI',consecuencia:'Daño a sistemas mecánicos o electrónicos de vehículos SEI',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Cubrir con lonas los vehículos SEI en área próxima al trabajo, controlar generación de polvo con humectación, limpiar área al término de cada jornada',responsable:'Contratista / Jefe SEI',nivel_residual:'Bajo'},
+      {peligro:'Reducción de categoría OACI durante el período de obra',consecuencia:'Restricciones operacionales al aeródromo, impacto en operaciones',probabilidad:'Baja',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Planificar trabajos en períodos de menor impacto operacional, coordinar con administración AAP posible reducción temporal de categoría y sus implicancias, informar a aerolíneas con anticipación',responsable:'SLA / Administración AAP',nivel_residual:'Bajo'},
+    ],
+    'Depósito combustible (HERCO)': [
+      {peligro:'Ignición de vapores de combustible durante trabajos en caliente',consecuencia:'Incendio o explosión en zona de almacenamiento de combustible — víctimas y daños mayores',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Prohibición absoluta de trabajos en caliente (soldadura, esmeril, corte) sin permiso especial firmado por Jefe SMS, extintor clase B vigente en área, no fumar ni generar chispas, ventilación adecuada, medición de gases antes de iniciar',responsable:'Contratista / RESO-AAP / SMS',nivel_residual:'Bajo'},
+      {peligro:'Derrame de combustible al pavimento o suelo',consecuencia:'Contaminación ambiental grave, riesgo de incendio, afectación a operaciones',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Kit antiderrame obligatorio en área, bandejas de contención bajo equipos y mangueras, procedimiento de respuesta inmediata a derrames, notificación a SMS y Medio Ambiente dentro de los 30 minutos',responsable:'Contratista / Medio Ambiente',nivel_residual:'Bajo'},
+      {peligro:'Electricidad estática en operaciones de mantenimiento cerca de combustible',consecuencia:'Ignición de vapores, incendio',probabilidad:'Baja',severidad:'Catastrófico',nivel_riesgo:'Medio',medidas_control:'Calzado antiestático obligatorio, toma a tierra de todos los equipos metálicos antes de iniciar, prohibición de ropa sintética, no usar equipos electrónicos no certificados ATEX',responsable:'Contratista',nivel_residual:'Bajo'},
+      {peligro:'Daño a tuberías o válvulas de combustible durante excavaciones o perforaciones',consecuencia:'Derrame masivo de combustible, explosión, paralización del suministro de combustible al aeropuerto',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Planos actualizados de tuberías antes de iniciar cualquier excavación, detección con equipos de localización de tuberías, excavación manual en área de incertidumbre, coordinación con HERCO para cierre de válvulas de seguridad',responsable:'Contratista / HERCO',nivel_residual:'Bajo'},
+      {peligro:'Acceso de personal no autorizado a zona restringida de combustible',consecuencia:'Manipulación inadvertida de equipos, riesgo de accidente',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Control de acceso estricto, lista de personal autorizado con fotocheck visible, cercamiento de área de trabajo, acompañamiento permanente del RESO-AAP',responsable:'RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Generación de fuentes de ignición por equipos de obra (motor a explosión)',consecuencia:'Incendio en zona de combustible',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Uso preferente de equipos eléctricos en área de combustible, si se usan motores a explosión deben estar a mínimo 10m de cualquier fuente de vapores, tubo de escape con arrestador de chispas',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+    ],
+    'Cerco perimetral': [
+      {peligro:'Brecha temporal en cerco perimetral durante trabajos de mantenimiento o reparación',consecuencia:'Acceso no autorizado al lado aire por personas o fauna, compromiso de seguridad aeroportuaria',probabilidad:'Alta',severidad:'Mayor',nivel_riesgo:'Alto',medidas_control:'Cercamiento provisional del área intervenida antes de abrir cualquier brecha, vigía permanente en apertura durante toda la jornada, notificar a AVSEC, cierre obligatorio con candado al término de cada jornada',responsable:'Contratista / RESO-AAP / AVSEC',nivel_residual:'Bajo'},
+      {peligro:'Ingreso de fauna silvestre por brecha en cerco perimetral',consecuencia:'Wildlife strike en operaciones aéreas, daño a aeronaves',probabilidad:'Alta',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Inspección de fauna en el área antes de abrir brecha, coordinación con área de gestión de fauna, cierre total de brecha fuera del horario de trabajo, reporte inmediato a SMS ante avistamiento de fauna en área de movimiento',responsable:'RESO-AAP / SMS-Fauna',nivel_residual:'Medio'},
+      {peligro:'Daño a sistemas de iluminación perimetral durante trabajos',consecuencia:'Reducción de seguridad perimetral nocturna, puntos ciegos en vigilancia',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Identificar y proteger postes de iluminación en área de trabajo, coordinar con Mantenimiento antes de iniciar, reparación inmediata ante daño accidental',responsable:'Contratista / Mantenimiento',nivel_residual:'Bajo'},
+      {peligro:'Daño a sistemas de CCTV o sensores de intrusión perimetral',consecuencia:'Pérdida de cobertura de vigilancia en sector afectado',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Identificar ubicación de cámaras y sensores antes de iniciar, proteger con estructuras provisionales, coordinar con AVSEC para monitoreo alternativo del sector durante la obra',responsable:'Contratista / AVSEC',nivel_residual:'Bajo'},
+      {peligro:'Confusión de rutas de acceso vehicular externo al aeropuerto',consecuencia:'Vehículo externo ingresa a zona restringida sin autorización',probabilidad:'Baja',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Señalización clara de desvíos durante la obra, coordinación con seguridad de acceso vehicular, barrera física en cualquier acceso alternativo generado por la obra',responsable:'Contratista / AVSEC',nivel_residual:'Bajo'},
+      {peligro:'Generación de puntos de escalada en cerco por andamios o materiales apilados',consecuencia:'Facilitar intrusión no autorizada al lado aire',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'No apoyar materiales, andamios o equipos contra el cerco por el lado exterior, retirar todo material al término de la jornada, inspección perimetral de fin de jornada',responsable:'Contratista / AVSEC',nivel_residual:'Bajo'},
+    ],
+    'Zona de escudos / franjas de seguridad': [
+      {peligro:'Personal o equipos en franja de seguridad durante operaciones',consecuencia:'Impacto con aeronave fuera de pista (runway excursion)',probabilidad:'Baja',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Autorización específica de TWR para trabajos en franja de seguridad, suspender actividad durante cualquier operación de aterrizaje o despegue, vigía con radio VHF, señalización visible desde cabina',responsable:'SLA / TWR',nivel_residual:'Bajo'},
+      {peligro:'Maquinaria elevada en franja de seguridad interfiere con superficie de despegue/aterrizaje',consecuencia:'Obstáculo en OFZ (Obstacle Free Zone), riesgo para aeronaves en aproximación frustrada',probabilidad:'Media',severidad:'Catastrófico',nivel_riesgo:'Alto',medidas_control:'Verificar superficies limitadoras de obstáculos antes de elevar cualquier equipo, coordinación con AIS para verificación de OFZ, NOTAM si aplica',responsable:'SLA / AIS-CORPAC',nivel_residual:'Bajo'},
+      {peligro:'Alteración del drenaje natural de la franja de seguridad',consecuencia:'Acumulación de agua en franja, hydroplaning en runway excursion',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Respetar la pendiente natural de la franja, restablecer drenaje inmediatamente post-obra, inspección post-lluvia del área intervenida',responsable:'Contratista / Mantenimiento',nivel_residual:'Bajo'},
+    ],
+    'default': [
+      {peligro:'Acceso de personal sin autorización o sin fotocheck a zona restringida del lado aire',consecuencia:'Interferencia con operaciones aeroportuarias, compromiso de seguridad',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Control de acceso con lista de personal autorizado, fotocheck visible en todo momento, acompañamiento de RESO-AAP durante toda la actividad, registro de ingreso y salida',responsable:'RESO-AAP / AVSEC',nivel_residual:'Bajo'},
+      {peligro:'Generación y dispersión de FOD en áreas de movimiento',consecuencia:'Daño a aeronaves, ingesta en motores, incidentes de rodaje',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Inspección FOD antes del inicio y al término de cada jornada, contenedores cerrados para residuos, barrido del área de influencia, registro fotográfico, check de herramientas y materiales',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Accidente laboral de personal contratista en el lado aire',consecuencia:'Lesiones a personal, interrupción de actividad, impacto en operaciones',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'EPP completo obligatorio (casco, chaleco reflectivo clase 2, zapatos de seguridad, guantes), RESO-AAP presente durante toda la actividad, botiquín de primeros auxilios disponible, protocolo de emergencia médica activado y comunicado al personal',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Comunicación deficiente o pérdida de radio entre RESO-AAP y Torre de Control',consecuencia:'Conflicto no detectado con operaciones aéreas, reacción tardía ante emergencia',probabilidad:'Media',severidad:'Peligroso',nivel_riesgo:'Alto',medidas_control:'Radio VHF activo con batería de reserva cargada, frecuencia de TWR configurada y verificada antes del inicio, protocolo de comunicación establecido, batería de repuesto disponible',responsable:'SLA / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Ingreso de vehículos de obra sin revisión técnica previa',consecuencia:'Falla mecánica en área de movimiento, derrame de fluidos, obstáculo imprevisto',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Revisión técnica de vehículos antes del ingreso (frenos, luces, hermeticidad de depósitos), SOAT vigente, extintor a bordo, registro de verificación previa al ingreso',responsable:'Contratista / SLA',nivel_residual:'Bajo'},
+      {peligro:'Condiciones meteorológicas adversas (lluvia intensa, viento fuerte, tormenta eléctrica)',consecuencia:'Reducción de visibilidad, accidentes laborales, interferencia con operaciones',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Monitoreo meteorológico antes y durante la jornada, protocolo de suspensión de actividad ante lluvia intensa o tormenta, evacuación ordenada del personal del área de movimiento',responsable:'SLA / Contratista',nivel_residual:'Bajo'},
+      {peligro:'Señalización provisional de obra insuficiente o deteriorada',consecuencia:'Desorientación de pilotos, conductores o peatones en área de movimiento',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'Verificación diaria del estado de señalización, reposición inmediata de conos o tableros caídos o deteriorados, inspección nocturna de balizas y reflectivos',responsable:'Contratista / RESO-AAP',nivel_residual:'Bajo'},
+      {peligro:'Presencia de fauna en área de trabajo atraída por residuos de obra',consecuencia:'Wildlife strike en operaciones aéreas',probabilidad:'Media',severidad:'Mayor',nivel_riesgo:'Medio',medidas_control:'No dejar residuos de alimentos en área de trabajo, contenedores cerrados para residuos orgánicos, reporte inmediato a SMS-Fauna ante avistamiento de fauna en área de movimiento',responsable:'Contratista / SMS',nivel_residual:'Bajo'},
+    ],
+    };
+
+// Seleccionar peligros según zona
+  setTimeout(() => {
+    const zona = p.zona || '';
+    let peligros = [];
+    
+    // Buscar coincidencia de zona
+    Object.keys(PELIGROS_BASE).forEach(key => {
+      if (key !== 'default' && zona.toLowerCase().includes(key.toLowerCase())) {
+        peligros = peligros.concat(PELIGROS_BASE[key]);
+      }
+    });
+    
+    // Si no hay coincidencia específica, usar defaults
+    if (peligros.length === 0) peligros = PELIGROS_BASE['default'];
+    
+    // Agregar peligros comunes de default si la zona es específica
+    if (peligros.length > 0 && peligros !== PELIGROS_BASE['default']) {
+      peligros = peligros.concat(PELIGROS_BASE['default'].slice(0,2));
+    }
+
+    // Peligros condicionales — según personal, equipos mayores, ruta crítica, horario y clasificación
+    const PELIGROS_CONDICIONALES = [
+      {
+        condicion: pv => Number(pv.num_personal||0) >= 10,
+        peligro: 'Cuadrilla numerosa (10 o más personas) operando simultáneamente en el lado aire',
+        consecuencia: 'Dificultad de control y supervisión, mayor probabilidad de dispersión fuera del área autorizada',
+        probabilidad: 'Media', severidad: 'Mayor',
+        medidas_control: 'Designar responsables de sub-grupos, briefing de seguridad previo a toda la cuadrilla, control de asistencia y ubicación en todo momento, RESO-AAP con visión total del área de trabajo',
+        responsable: 'RESO-AAP / Contratista'
+      },
+      {
+        condicion: pv => { try { const eq = JSON.parse(pv.equipos_mayores||'[]'); return Array.isArray(eq) && eq.length > 0; } catch(e) { return false; } },
+        peligro: 'Operación de maquinaria pesada (equipos mayores) en proximidad a infraestructura aeronáutica',
+        consecuencia: 'Colisión o daño a estructuras, aeronaves o sistemas de ayuda a la navegación por maniobra de equipo pesado',
+        probabilidad: 'Media', severidad: 'Peligroso',
+        medidas_control: 'Verificar radios de giro y alcance de cada equipo antes de operar, vigía dedicado exclusivamente a supervisar la maquinaria pesada, delimitación física del área de maniobra, operador certificado',
+        responsable: 'Contratista / RESO-AAP'
+      },
+      {
+        condicion: pv => pv.ruta_cruza_critica === true || pv.ruta_cruza_critica === 'true',
+        peligro: 'La ruta de desplazamiento autorizada cruza un área operacional crítica (pista, calle de rodaje o plataforma activa)',
+        consecuencia: 'Conflicto directo con aeronaves u operaciones en movimiento durante el tránsito',
+        probabilidad: 'Media', severidad: 'Catastrófico',
+        medidas_control: 'Autorización expresa de TWR para cada cruce, vigía con radio VHF dedicado exclusivamente al cruce, tránsito solo en ventanas de coordinación confirmadas, nunca cruzar sin clearance explícito',
+        responsable: 'SLA / TWR'
+      },
+      {
+        condicion: pv => pv.fuera_horario_operativo === true || pv.fuera_horario_operativo === 'true',
+        peligro: 'Actividad programada fuera del horario operativo regular (visibilidad reducida, menor personal de turno)',
+        consecuencia: 'Menor supervisión disponible, condiciones de iluminación no óptimas',
+        probabilidad: 'Baja', severidad: 'Mayor',
+        medidas_control: 'Confirmar personal de turno disponible antes de iniciar, iluminación artificial adecuada del área de trabajo, comunicación reforzada con torre/operaciones, briefing específico de condiciones nocturnas',
+        responsable: 'SLA / Contratista'
+      },
+      {
+        condicion: pv => (pv.tipo_actividad||'').includes('AMA'),
+        peligro: 'Actividad clasificada como Actividad Mayor (AMA) con afectación potencial a la operación regular del aeródromo',
+        consecuencia: 'Impacto en la capacidad operacional si no se coordina adecuadamente con todos los actores (DGAC, aerolíneas, ATC)',
+        probabilidad: 'Baja', severidad: 'Mayor',
+        medidas_control: 'NOTAM publicado con antelación suficiente, coordinación con aerolíneas y ATC, Matriz HIRA aprobada antes del inicio, seguimiento diario del cumplimiento del cronograma',
+        responsable: 'SLA / Gestor SMS'
+      },
+    ];
+    PELIGROS_CONDICIONALES.forEach(pc => {
+      if (pc.condicion(p) && !peligros.some(ex => ex.peligro === pc.peligro)) {
+        peligros.push({ peligro: pc.peligro, consecuencia: pc.consecuencia, probabilidad: pc.probabilidad, severidad: pc.severidad, medidas_control: pc.medidas_control, responsable: pc.responsable });
+      }
+    });
+
+    // Numerar peligros y traducir a la escala oficial OACI (Doc 9859)
+    function shiftSev(sev, pasos) { const letras=['A','B','C','D','E']; let i=Math.min(4, letras.indexOf(sev)+pasos); return letras[i]; }
+    peligros = peligros.map(function(r, i) {
+      const prob = traducirProbVieja(r.probabilidad);
+      const sev = traducirSevVieja(r.severidad);
+      // Estimación inicial de riesgo residual (post-mitigación) — el validador debe ajustarla según su criterio
+      const probResidual = Math.max(1, prob - 2);
+      const sevResidual = shiftSev(sev, 2);
+      return {
+        id: 'P' + String(i+1).padStart(2,'0'),
+        peligro: r.peligro, consecuencia: r.consecuencia,
+        prob, sev, probResidual, sevResidual,
+        medidas_control: r.medidas_control, responsable: r.responsable
+      };
+    });
+
+    // Conclusión automática
+    const tieneIntolerable = peligros.some(r => calcularTolerabilidad(r.prob, r.sev).tol === 'Intolerable');
+    const conclusion = tieneIntolerable
+      ? `La actividad presenta peligros con índice de riesgo INTOLERABLE que requieren mitigación prioritaria antes del inicio. Deben implementarse controles adicionales para reducir el riesgo a un rango tolerable, o evaluar la suspensión de la actividad. El RESO-AAP deberá estar presente durante toda la actividad.`
+      : `La actividad presenta peligros en rango TOLERABLE/ACEPTABLE manejables con las medidas de control establecidas. Se recomienda verificar señalización, EPP y comunicación con operaciones antes del inicio.`;
+
+    const matriz = { peligros, conclusion };
+    p.matriz_ia = matriz;
+
+    resultado.innerHTML = renderResultadoMatriz(pvsoId, zona);
+    resultado.style.display = 'block';
+    btn.disabled = false;
+    loading.style.display = 'none';
+  }, 800); // Simular pequeño delay de procesamiento
+}
+
+
+async function aprobarMatrizIA(pvsoId, esExcepcionSLA) {
+  const p = allPVSOs.find(x => x.id === pvsoId);
+  if (!p || !p.matriz_ia) return;
+  const rolLabel = currentUser.rol==='sla'?'SLA':currentUser.rol==='asistente'?'Asistente SMS':'Gestor SMS';
+  if (esExcepcionSLA) {
+    const confirma = confirm('Estás por aprobar la Matriz HIRA como Supervisor de Lado Aire, en ausencia del Jefe SMS y del Asistente SMS.\n\n¿Confirmas que ambos no están disponibles y asumes la aprobación?');
+    if (!confirma) return;
+  }
+  // Código correlativo, fecha de identificación y validador — se fijan una sola vez, al aprobar
+  if (!p.matriz_ia.codigo) {
+    const yaCodificadas = allPVSOs.filter(x => { try { return JSON.parse(x.matriz_adjunto).codigo; } catch(e) { return false; } }).length;
+    p.matriz_ia.codigo = 'HIRA-SMS-' + String(yaCodificadas + 1).padStart(4, '0');
+    p.matriz_ia.fecha_identificacion = new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    p.matriz_ia.validado_por = currentUser.nombre + ' — ' + rolLabel + (esExcepcionSLA ? ' (excepción)' : '');
+  }
+  p.estado = 'PENDIENTE_DGAC';
+  p.historial = p.historial || [];
+  const accionAprob = esExcepcionSLA
+    ? `Matriz HIRA generada por IA y aprobada por el SLA (excepción: Jefe/Asistente SMS no disponibles). Enviando a DGAC.`
+    : `Matriz HIRA generada por IA y aprobada por ${rolLabel}. Enviando a DGAC.`;
+  p.historial.push({
+    fecha: new Date().toISOString(),
+    accion: accionAprob,
+    usuario: currentUser.nombre + ' (' + rolLabel + ')'
+  });
+  await guardarCambiosPVSO(pvsoId, {
+    estado: 'PENDIENTE_DGAC',
+    matriz_adjunto: JSON.stringify(p.matriz_ia)
+  }, accionAprob);
+  notif('✓ Matriz aprobada. PVSO avanza a validación DGAC.', 3000);
+  updateStats();
+  renderDetail();
+}
+
+function renderMatrizTab(){const c=document.getElementById('matriz-list');if(!c)return;const lista=allPVSOs.filter(p=>p.tipo_clasificacion==='AMA'&&p.estado==='APROBADO_SLA');if(!lista.length){c.innerHTML=`<div class="empty"><p>No hay PVSOs AMA pendientes de Matriz HIRA</p></div>`;return;}c.innerHTML=lista.map(p=>`<div class="pvso-card" onclick="openPVSO('${p.id}');showTab('solicitudes')"><div class="pvso-card-hdr"><div class="pvso-indicator" style="background:#8B5CF6"></div><div class="pvso-info"><div class="pvso-empresa">${p.empresa}</div><div class="pvso-meta">${p.id} · ${p.zona}</div></div><span class="pvso-estado e-sla">Pendiente Matriz HIRA</span><span class="pvso-arrow">›</span></div></div>`).join('');}
+
+// --- DASHBOARD ----------------------------------------------------------------
+function renderDashboard(){
+  // Sincronizar selector de lista
+  const listSel = document.getElementById('sel-sede');
+  const sedeFilter=document.getElementById('dash-sede-filter').value;
+  if(listSel && listSel.value !== sedeFilter){ listSel.value = sedeFilter; filterSede(sedeFilter); }
+  const data=sedeFilter?allPVSOs.filter(p=>p.sede===sedeFilter):allPVSOs;
+  document.getElementById('kpi-total').textContent=data.length;
+  document.getElementById('kpi-ama').textContent=data.filter(p=>p.tipo_clasificacion==='AMA').length;
+  document.getElementById('kpi-validados').textContent=data.filter(p=>p.estado==='PVSO_VALIDADO').length;
+  document.getElementById('kpi-pendientes').textContent=data.filter(p=>p.estado==='PENDIENTE_REVISION_SLA').length;
+
+  // Chart estados
+  const estadoCount={};['PENDIENTE_REVISION_SLA','CON_OBSERVACIONES','APROBADO_SLA','EN_ELABORACION_MATRIZ','PENDIENTE_DGAC','APROBADO_DGAC','NOTAM_PUBLICADO','PVSO_VALIDADO'].forEach(e=>estadoCount[e]=data.filter(p=>p.estado===e).length);
+  const labels=['Pend. revisión','Con obs.','Aprob. SLA','Matriz SMS','Pend. DGAC','Aprob. DGAC','NOTAM','Validado'];
+  const vals=Object.values(estadoCount);
+  const colors=['#EF9F27','#E24B4A','#185FA5','#8B5CF6','#EF9F27','#0A6E9E','#0A9E8E','#3B6D11'];
+  if(chartEstados)chartEstados.destroy();
+  const ctx1=document.getElementById('chart-estados');
+  chartEstados=new Chart(ctx1,{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderWidth:2,borderColor:'white'}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}});
+
+  // Chart tipos
+  const tipoCount={AMA:data.filter(p=>p.tipo_clasificacion==='AMA').length,AME:data.filter(p=>p.tipo_clasificacion==='AME').length,Visita:data.filter(p=>p.tipo_clasificacion==='Visita').length};
+  if(chartTipos)chartTipos.destroy();
+  const ctx2=document.getElementById('chart-tipos');
+  chartTipos=new Chart(ctx2,{type:'bar',data:{labels:['AMA','AME','Visita'],datasets:[{data:Object.values(tipoCount),backgroundColor:['#FCEBEB','#EAF3DE','#E6F1FB'],borderColor:['#A32D2D','#3B6D11','#185FA5'],borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0},grid:{color:'#EEECEA'}},x:{grid:{display:false}}}}});
+
+  // Barras por sede
+  const sedes=['AQP','AYP','JUL','PEM','TCQ'];
+  const sedeCounts=sedes.map(s=>({sede:s,count:allPVSOs.filter(p=>p.sede===s).length}));
+  const maxC=Math.max(...sedeCounts.map(s=>s.count),1);
+  document.getElementById('sede-bars').innerHTML=sedeCounts.map(s=>`
+    <div class="sede-row">
+      <span class="sede-name">${s.sede}</span>
+      <div class="sede-bar-wrap"><div class="sede-bar" style="width:${(s.count/maxC*100).toFixed(0)}%"></div></div>
+      <span class="sede-count">${s.count}</span>
+    </div>`).join('');
+
+  // Timeline
+  const sorted=[...data].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,8);
+  document.getElementById('timeline-list').innerHTML=sorted.map(p=>`
+    <div class="timeline-item">
+      <span class="tl-fecha">${fmtDate(p.timestamp).split(' ')[0]}</span>
+      <span class="tl-empresa">${p.empresa}</span>
+      <span class="badge-sm ${tipoCls(p.tipo_clasificacion)}" style="padding:1px 6px">${p.tipo_clasificacion}</span>
+      <span class="tl-sede">${p.sede}</span>
+    </div>`).join('');
+}
+
+// --- BITÁCORA ----------------------------------------------------------------
+let bitaSelectedDate = new Date();
+bitaSelectedDate.setHours(0,0,0,0);
+let bitaView = 'semana'; // 'semana' | 'mes'
+let bitaRefDate = new Date(); // referencia para mes/semana actual
+bitaRefDate.setHours(0,0,0,0);
+
+function setBitaView(v) {
+  bitaView = v;
+  document.getElementById('bvb-semana').classList.toggle('active', v==='semana');
+  document.getElementById('bvb-mes').classList.toggle('active', v==='mes');
+  document.getElementById('bita-view-semana').style.display = v==='semana'?'block':'none';
+  document.getElementById('bita-view-mes').style.display = v==='mes'?'block':'none';
+  renderBitacora();
+}
+
+function navBita(dir) {
+  if (bitaView === 'semana') {
+    bitaRefDate.setDate(bitaRefDate.getDate() + dir * 7);
+    bitaSelectedDate = new Date(bitaRefDate);
+  } else {
+    bitaRefDate.setMonth(bitaRefDate.getMonth() + dir);
+  }
+  renderBitacora();
+}
+
+function goToToday() {
+  bitaRefDate = new Date(); bitaRefDate.setHours(0,0,0,0);
+  bitaSelectedDate = new Date(bitaRefDate);
+  renderBitacora();
+}
+
+function getWeekDays(refDate) {
+  const days = [];
+  const start = new Date(refDate);
+  // Semana: lunes a domingo de la semana actual
+  const dow = start.getDay(); // 0=Dom
+  const diffToMon = (dow === 0 ? -6 : 1 - dow);
+  start.setDate(start.getDate() + diffToMon);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    days.push(d);
+  }
+  return days;
+}
+
+function isSameDay(a, b) {
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function actividadesDelDia(fecha) {
+  const sedeFilter = document.getElementById('bita-sede-filter')?.value || '';
+  const today = new Date(); today.setHours(0,0,0,0);
+  // Generar actividades de demo basadas en PVSOs validados o en proceso
+  const fuente = allPVSOs.filter(p => {
+    if (!['PVSO_VALIDADO','APROBADO_SLA','EN_ELABORACION_MATRIZ','PENDIENTE_DGAC','APROBADO_DGAC','NOTAM_PUBLICADO'].includes(p.estado)) return false;
+    if (sedeFilter && p.sede !== sedeFilter) return false;
+    if (!p.fecha_ingreso || !p.fecha_salida) return false;
+    const fi = new Date(p.fecha_ingreso); fi.setHours(0,0,0,0);
+    const fs = new Date(p.fecha_salida); fs.setHours(0,0,0,0);
+    return fecha >= fi && fecha <= fs;
+  });
+  return fuente.sort((a,b) => {
+    const ta = new Date(a.fecha_ingreso).getTime();
+    const tb = new Date(b.fecha_ingreso).getTime();
+    return ta - tb;
+  });
+}
+
+function renderBitacora() {
+  if (!allPVSOs.length) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const sedeFilter = document.getElementById('bita-sede-filter')?.value || '';
+  const listSel = document.getElementById('sel-sede');
+  if (listSel && sedeFilter) listSel.value = sedeFilter;
+
+  if (bitaView === 'mes') {
+    renderBitacoraMes(today, dayNames, monthNames);
+    return;
+  }
+
+  // -- VISTA SEMANA --
+  const weekDays = getWeekDays(bitaRefDate);
+  const periodLabel = `${weekDays[0].getDate()} ${monthNames[weekDays[0].getMonth()]} — ${weekDays[6].getDate()} ${monthNames[weekDays[6].getMonth()]} ${weekDays[6].getFullYear()}`;
+  document.getElementById('bita-period-label').textContent = periodLabel;
+
+  const strip = document.getElementById('bita-week-strip');
+  strip.innerHTML = weekDays.map((d) => {
+    const acts = actividadesDelDia(d);
+    const isToday = isSameDay(d, today);
+    const isSelected = isSameDay(d, bitaSelectedDate);
+    const hasItems = acts.length > 0;
+    return `<div class="bita-week-day${isSelected?' active':''}${isToday?' today-wk':''}${hasItems?' has-items':''}"
+      onclick="selectBitaDay(${d.getFullYear()},${d.getMonth()},${d.getDate()})">
+      <div class="bwd-name">${dayNames[d.getDay()]}</div>
+      <div class="bwd-num">${d.getDate()}</div>
+      <span class="bwd-count">${acts.length > 0 ? acts.length + ' ingreso' + (acts.length>1?'s':'') : ''}</span>
+    </div>`;
+  }).join('');
+
+  const selActs = actividadesDelDia(bitaSelectedDate);
+  const isToday = isSameDay(bitaSelectedDate, today);
+  const dateLabel = `${dayNames[bitaSelectedDate.getDay()]} ${bitaSelectedDate.getDate()} ${monthNames[bitaSelectedDate.getMonth()]} ${bitaSelectedDate.getFullYear()}`;
+  document.getElementById('bita-subtitle').textContent = (isToday ? 'Hoy — ' : '') + dateLabel;
+  document.getElementById('bk-total').textContent = selActs.length;
+  document.getElementById('bk-ama').textContent = selActs.filter(p=>p.tipo_clasificacion==='AMA').length;
+  document.getElementById('bk-ame').textContent = selActs.filter(p=>p.tipo_clasificacion==='AME').length;
+  document.getElementById('bk-personas').textContent = selActs.reduce((s,p)=>s+(parseInt(p.num_personal)||0),0);
+
+  const list = document.getElementById('bita-list');
+  if (!selActs.length) {
+    list.innerHTML = `<div class="bita-empty"><div class="bita-empty-icon">📋</div><p>No hay ingresos programados para este día</p></div>`;
+    return;
+  }
+
+  list.innerHTML = selActs.map(p => {
+    const fi = new Date(p.fecha_ingreso);
+    const fs = new Date(p.fecha_salida);
+    const hIn = fi.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+    const hOut = fs.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+    const color = indColor(p.estado);
+    const tipoCls_ = p.tipo_clasificacion==='AMA'?'b-ama':p.tipo_clasificacion==='AME'?'b-ame':'b-visita';
+    const estadoShort = {
+      'PVSO_VALIDADO':'Validado ✓',
+      'APROBADO_SLA':'Aprob. SLA',
+      'EN_ELABORACION_MATRIZ':'Matriz SMS',
+      'PENDIENTE_DGAC':'Pend. DGAC',
+      'APROBADO_DGAC':'Aprob. DGAC',
+      'NOTAM_PUBLICADO':'NOTAM pub.'
+    }[p.estado] || p.estado;
+
+    return `<div class="bita-item" onclick="openPVSO('${p.id}');showTab('solicitudes')" style="cursor:pointer">
+      <div class="bita-indicator" style="background:${color}"></div>
+      <div class="bita-time-col">
+        <div class="bita-time-in">${hIn}</div>
+        <div class="bita-time-arrow">↓</div>
+        <div class="bita-time-out">${hOut}</div>
+      </div>
+      <div class="bita-main">
+        <div style="flex:1;min-width:160px">
+          <div class="bita-empresa">${p.empresa}</div>
+          <div class="bita-zona">${p.zona} · ${p.sede}</div>
+        </div>
+        <div class="bita-chips">
+          <span class="badge-sm ${tipoCls_}">${p.tipo_clasificacion}</span>
+          <span class="pvso-estado ${estadoCls(p.estado)}" style="font-size:10px">${estadoShort}</span>
+          <span class="bita-personas">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            ${p.num_personal} personas
+          </span>
+          <span style="font-size:11px;color:var(--g400)">${p.reso_aap_nombre||'—'}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBitacoraMes(today, dayNames, monthNames) {
+  const y = bitaRefDate.getFullYear();
+  const mo = bitaRefDate.getMonth();
+  const monthNames2 = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  document.getElementById('bita-period-label').textContent = `${monthNames2[mo]} ${y}`;
+  document.getElementById('bita-subtitle').textContent = `Vista mensual — ${monthNames2[mo]} ${y}`;
+
+  // Calcular todos los días del mes
+  const firstDay = new Date(y, mo, 1);
+  const lastDay = new Date(y, mo+1, 0);
+  const totalDays = lastDay.getDate();
+  let startDow = firstDay.getDay(); // 0=Dom
+  if (startDow === 0) startDow = 7; // Lunes=1
+  startDow -= 1; // offset para grid
+
+  // KPIs del mes
+  let mesTotal=0, mesAma=0, mesAme=0, mesPersonas=0, mesDias=0;
+  for (let d=1; d<=totalDays; d++) {
+    const fecha = new Date(y,mo,d); fecha.setHours(0,0,0,0);
+    const acts = actividadesDelDia(fecha);
+    if (acts.length>0) mesDias++;
+    mesTotal += acts.length;
+    mesAma += acts.filter(p=>p.tipo_clasificacion==='AMA').length;
+    mesAme += acts.filter(p=>p.tipo_clasificacion==='AME').length;
+    mesPersonas += acts.reduce((s,p)=>s+(parseInt(p.num_personal)||0),0);
+  }
+  document.getElementById('bkm-total').textContent = mesTotal;
+  document.getElementById('bkm-ama').textContent = mesAma;
+  document.getElementById('bkm-ame').textContent = mesAme;
+  document.getElementById('bkm-personas').textContent = mesPersonas;
+  document.getElementById('bkm-dias').textContent = mesDias;
+
+  // Calendario
+  const calEl = document.getElementById('bita-cal');
+  const dayNamesShort = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  let calHtml = `<div class="bita-cal-header">${dayNamesShort.map(n=>`<div class="bita-cal-dayname">${n}</div>`).join('')}</div><div class="bita-cal-grid">`;
+
+  // Celdas vacías al inicio
+  for (let i=0; i<startDow; i++) calHtml += `<div class="bita-cal-cell empty"></div>`;
+
+  for (let d=1; d<=totalDays; d++) {
+    const fecha = new Date(y,mo,d); fecha.setHours(0,0,0,0);
+    const acts = actividadesDelDia(fecha);
+    const isToday = isSameDay(fecha, today);
+    const isSelected = isSameDay(fecha, bitaSelectedDate);
+    const entriesHtml = acts.slice(0,2).map(p=>
+      `<div class="bita-cal-entry ${p.tipo_clasificacion==='AMA'?'ama':'ame'}">${p.empresa.split(' ')[0]}</div>`
+    ).join('') + (acts.length>2?`<div class="bita-cal-more">+${acts.length-2} más</div>`:'');
+    calHtml += `<div class="bita-cal-cell${isToday?' today':''}${isSelected?' selected':''}"
+      onclick="selectBitaDayFromCal(${y},${mo},${d})">
+      <div class="bita-cal-num">${d}</div>
+      <div class="bita-cal-entries">${entriesHtml}</div>
+    </div>`;
+  }
+  calHtml += '</div>';
+  calEl.innerHTML = calHtml;
+}
+
+function selectBitaDayFromCal(y,m,d) {
+  bitaSelectedDate = new Date(y,m,d);
+  bitaRefDate = new Date(y,m,d);
+  setBitaView('semana');
+}
+
+function selectBitaDay(y,m,d) {
+  bitaSelectedDate = new Date(y,m,d);
+  bitaRefDate = new Date(y,m,d);
+  renderBitacora();
+}
+
+// Al cambiar sede en bitácora, sincronizar con lista
+document.getElementById('bita-sede-filter')?.addEventListener('change', function(){
+  const listSel = document.getElementById('sel-sede');
+  if(listSel){ listSel.value = this.value; filterSede(this.value); }
+});
+
+</script>
+</body>
+</html>
