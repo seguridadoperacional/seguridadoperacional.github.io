@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corrección de PVSO — Aeropuertos Andinos del Perú</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --aap-blue: #0D3B6E;
+  --aap-blue-mid: #185FA5;
+  --aap-blue-light: #E6F1FB;
+  --aap-gold: #C8960C;
+  --danger: #A32D2D;
+  --danger-bg: #FCEBEB;
+  --danger-border: #F09595;
+  --warning: #854F0B;
+  --warning-bg: #FAEEDA;
+  --warning-border: #EF9F27;
+  --success: #3B6D11;
+  --success-bg: #EAF3DE;
+  --success-border: #97C459;
+  --gray-50: #F7F6F3;
+  --gray-100: #EEECEA;
+  --gray-200: #D5D3CE;
+  --gray-400: #9A9690;
+  --gray-600: #5F5D58;
+  --gray-900: #1C1C1A;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); font-size: 15px; line-height: 1.6; }
+a { color: var(--aap-blue-mid); }
+.header { background: var(--aap-blue); }
+.header-inner { max-width: 720px; margin: 0 auto; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.header-logo { height: 46px; width: auto; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px 10px; }
+.header-text h1 { color: white; font-size: 15px; font-weight: 600; }
+.header-text p { color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 1px; }
+.header-strip { background: var(--aap-gold); height: 3px; }
+.page { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); }
+.card h2 { font-size: 17px; font-weight: 600; color: var(--aap-blue); margin-bottom: 0.5rem; }
+.card p.sub { font-size: 13px; color: var(--gray-600); }
+.pvso-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; font-size: 12px; color: var(--gray-600); font-family: 'JetBrains Mono', monospace; }
+.pvso-meta span { background: var(--gray-50); border: 0.5px solid var(--gray-200); border-radius: 100px; padding: 3px 10px; }
+.item-card { background: white; border-radius: 12px; border: 0.5px solid var(--warning-border); padding: 1.5rem 1.75rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+.item-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 0.75rem; }
+.item-num { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--gray-400); font-weight: 600; }
+.item-name { font-size: 15px; font-weight: 600; color: var(--gray-900); }
+.obs-box { background: var(--warning-bg); border: 0.5px solid var(--warning-border); border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 13px; color: var(--warning); }
+.obs-box strong { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; }
+.field { margin-bottom: 0.85rem; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 4px; }
+.field input, .field textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--gray-900); background: white; }
+.field textarea { min-height: 70px; resize: vertical; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--aap-blue-mid); box-shadow: 0 0 0 3px var(--aap-blue-light); }
+.readonly-note { background: var(--gray-50); border: 0.5px dashed var(--gray-200); border-radius: var(--radius); padding: 0.65rem 0.85rem; font-size: 12px; color: var(--gray-600); }
+.eq-rows { margin-bottom: 0.5rem; }
+.eq-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
+.eq-row input.eq-tipo { flex: 3; }
+.eq-row input.eq-cant { flex: 1; }
+.eq-row button { flex-shrink: 0; background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger); border-radius: var(--radius); width: 32px; height: 32px; cursor: pointer; font-size: 14px; }
+.btn-add-row { background: var(--aap-blue-light); border: 0.5px solid var(--aap-blue-mid); color: var(--aap-blue-mid); border-radius: var(--radius); padding: 0.4rem 0.8rem; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.mapa-rutas-cont { height: 320px; border-radius: var(--radius); overflow: hidden; margin-top: 0.5rem; border: 1px solid var(--gray-200); }
+.mapa-rutas-tip { font-size: 11px; color: var(--gray-600); background: var(--gray-50); border: 0.5px dashed var(--gray-200); border-radius: var(--radius); padding: 0.5rem 0.75rem; margin-top: 0.5rem; }
+.btn-submit { width: 100%; background: var(--aap-blue); color: white; border: none; border-radius: var(--radius); padding: 0.9rem; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 0.5rem; }
+.btn-submit:hover { background: var(--aap-blue-mid); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.status-msg { text-align: center; padding: 3rem 1.5rem; }
+.status-msg .icon { font-size: 40px; margin-bottom: 1rem; }
+.status-msg h2 { font-size: 18px; margin-bottom: 0.5rem; }
+.status-msg p { color: var(--gray-600); font-size: 14px; }
+.success-icon { color: var(--success); }
+.error-icon { color: var(--danger); }
+#loading { text-align: center; padding: 4rem 1.5rem; color: var(--gray-600); }
+.footer-note { text-align: center; font-size: 11px; color: var(--gray-400); margin-top: 2rem; }
+.sticky-reminder { position: sticky; top: 0; z-index: 50; background: var(--warning); color: white; text-align: center; font-size: 13px; font-weight: 600; padding: 0.6rem 1rem; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo"><img src="data:image/png;base64,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" alt="Aeropuertos Andinos del Perú" style="height:36px;width:auto;display:block"/></div>
+    <div class="header-text">
+      <h1>Aeropuertos Andinos del Perú</h1>
+      <p>Corrección de observaciones — PVSO</p>
+    </div>
+  </div>
+</div>
+<div class="header-strip"></div>
+<div class="sticky-reminder" id="sticky-reminder">⚠ No olvides volver aquí y hacer clic en "Enviar corrección" al terminar de subir tu archivo</div>
+
+<div class="page" id="page-container">
+  <div id="loading">Cargando datos de tu solicitud...</div>
+  <div id="content" style="display:none"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLLrTb5zJ4wJGDdDwEpz3eWAsNAkCOR5pmxu7f5XZ0jNlkisuMPp8NK-0zfwgUGZuX/exec';
+
+// Debe mantenerse igual que ITEM_TO_COLS en el .gs
+const ITEM_TO_COLS = {
+  'Tipo de atención y período': ['tipo_atencion'],
+  'Objeto del proyecto': ['objeto'],
+  'Cronograma': ['cronograma'],
+  'Ubicación': ['zona'],
+  'Área de cercamiento': ['area_cercamiento'],
+  'Señalización': ['senalizacion'],
+  'Equipos y maquinaria': ['equipos_menores', 'equipos_mayores', 'equipo_altura', 'equipo_anchura'],
+  'Rutas establecidas': ['rutas', 'ruta_puntos'],
+  'Pernocte y materiales': ['pernocte_equipos', 'pernocte_detalle', 'material_almacenado', 'material_detalle', 'material_control', 'pernocte_ubicacion', 'pernocte_delimitacion'],
+  'Responsables': ['reso_tercero', 'reso_tercero_cel', 'reso_tercero_correo', 'reso_aap_nombre', 'reso_aap_area', 'reso_aap_cel', 'reso_aap_correo', 'num_personal'],
+};
+// Columnas técnicas que no se editan en texto libre (requieren contactar al SLA)
+const COLS_NO_EDITABLES = { ruta_cruza_critica: true, pernocte_punto: true };
+// Debe mantenerse igual que FIELD_MAP_FORM en el .gs
+const FIELD_MAP_FORM = {
+  'tipo_atencion': 'item1_tipo_atencion', 'objeto': 'item3_objeto', 'cronograma': 'item5_cronograma',
+  'area_cercamiento': 'item7_area_cercamiento', 'senalizacion': 'item8_senalizacion',
+  'equipos_menores': 'item9_equipos_menores', 'equipos_mayores': 'item9_equipos_mayores', 'equipo_altura': 'item9_equipo_altura', 'equipo_anchura': 'item9_equipo_anchura',
+  'rutas': 'item10_rutas', 'ruta_puntos': 'ruta_puntos', 'reso_tercero': 'item11_reso_tercero', 'reso_tercero_cel': 'item11_reso_tercero_celular',
+  'reso_tercero_correo': 'item11_reso_tercero_correo', 'reso_aap_nombre': 'item11_reso_aap_nombre',
+  'reso_aap_area': 'item11_reso_aap_area', 'reso_aap_cel': 'item11_reso_aap_celular', 'reso_aap_correo': 'item11_reso_aap_correo',
+  'zona': 'zona',
+  'pernocte_equipos': 'pernocte_equipos', 'pernocte_detalle': 'pernocte_detalle', 'material_almacenado': 'material_almacenado',
+  'material_detalle': 'material_detalle', 'material_control': 'material_control', 'pernocte_ubicacion': 'pernocte_ubicacion',
+  'pernocte_delimitacion': 'pernocte_delimitacion',
+};
+const COL_LABEL = {
+  tipo_atencion: 'Tipo de atención', objeto: 'Objeto del proyecto', cronograma: 'Cronograma de actividades',
+  zona: 'Ubicación / zona', area_cercamiento: 'Área de cercamiento', senalizacion: 'Señalización',
+  equipos_menores: 'Equipos menores', equipo_altura: 'Altura del equipo', equipo_anchura: 'Ancho del equipo',
+  equipos_mayores: 'Equipos mayores',
+  pernocte_equipos: '¿Pernoctan equipos? (si / no)', pernocte_detalle: 'Equipos que se quedan', material_almacenado: '¿Se almacena material? (si / no)',
+  material_detalle: 'Material almacenado', material_control: 'Control de FOD / polvo / viento', pernocte_ubicacion: 'Lugar donde quedan', pernocte_delimitacion: 'Delimitación',
+  rutas: 'Descripción de rutas', reso_tercero: 'Responsable (tercero)', reso_tercero_cel: 'Celular del responsable',
+  reso_tercero_correo: 'Correo del responsable', reso_aap_nombre: 'RESO-AAP asignado', reso_aap_area: 'Área RESO-AAP',
+  reso_aap_cel: 'Celular RESO-AAP', reso_aap_correo: 'Correo RESO-AAP', num_personal: 'Número de personal',
+};
+
+// Ítems que llevan un documento adjunto asociado, y las claves reales de adjuntos_drive que le corresponden
+const ITEM_ADJ_KEYS = {
+  'Cronograma': ['cronograma'],
+  'Ubicación': ['plano_ubicacion'],
+  'Área de cercamiento': ['plano_cercamiento'],
+  'Señalización': ['plano_senalizacion'],
+  'Equipos y maquinaria': ['carta_I_equipos', 'carta_G_vehiculos'],
+  'Responsables': ['carta_C_personal'],
+};
+const ADJ_LABEL = {
+  cronograma: 'Cronograma de actividades',
+  plano_ubicacion: 'Plano / croquis de ubicación',
+  plano_cercamiento: 'Plano / croquis de cercamiento',
+  plano_senalizacion: 'Plano / croquis de señalización',
+  carta_I_equipos: 'Carta I — Facilidades de equipos / insumos',
+  carta_G_vehiculos: 'Carta G — Facilidades vehiculares',
+  carta_C_personal: 'Carta C — Facilidades personales',
+};
+
+let pvsoActual = null;
+let mapaRutasInstance = null;
+let rutaPuntosCorreccion = [];
+let rutaPolylineCorreccion = null;
+let rutaMarkersCorreccion = [];
+
+function leerArchivoBase64(inputId) {
+  return new Promise(resolve => {
+    const el = document.getElementById(inputId);
+    if (!el || !el.files.length) { resolve(''); return; }
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(el.files[0]);
+  });
+}
+
+function getParam(name) {
+  return new URLSearchParams(window.location.search).get(name);
+}
+
+async function init() {
+  const id = getParam('corregir');
+  const cont = document.getElementById('content');
+  const loading = document.getElementById('loading');
+
+  if (!id) {
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+    cont.innerHTML = renderError('Enlace incompleto', 'Este enlace no incluye el código del PVSO a corregir. Solicita al SLA que te reenvíe el correo de observaciones.');
+    return;
+  }
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=obtener&id=' + encodeURIComponent(id));
+    const json = await resp.json();
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+
+    if (!json.ok || !json.data) {
+      cont.innerHTML = renderError('PVSO no encontrado', `El código <strong>${id}</strong> no existe en el sistema. Verifica el enlace o contacta al SLA.`);
+      return;
+    }
+
+    pvsoActual = json.data;
+    let itemsEstado = pvsoActual.items_estado;
+    if (typeof itemsEstado === 'string') { try { itemsEstado = JSON.parse(itemsEstado); } catch(e) { itemsEstado = {}; } }
+    let itemsObs = pvsoActual.items_obs;
+    if (typeof itemsObs === 'string') { try { itemsObs = JSON.parse(itemsObs); } catch(e) { itemsObs = {}; } }
+    pvsoActual.items_estado = itemsEstado || {};
+    pvsoActual.items_obs = itemsObs || {};
+
+    const observados = Object.entries(pvsoActual.items_estado).filter(([, st]) => st === 'obs');
+
+    if (!observados.length) {
+      cont.innerHTML = renderHeaderCard() + renderError('Sin observaciones pendientes', 'Esta solicitud no tiene ítems observados en este momento, o ya fueron corregidos. No es necesario hacer nada más aquí.');
+      return;
+    }
+
+    cont.innerHTML = renderHeaderCard() + observados.map(([name]) => renderItemCard(name)).join('') +
+      `<button class="btn-submit" id="btn-enviar" onclick="enviarCorreccion()">Enviar corrección</button>
+       <p class="footer-note">Solo se actualizarán los ítems observados. El resto de tu solicitud permanece sin cambios.</p>`;
+
+  } catch (e) {
+    loading.style.display = 'none';
+    cont.style.display = 'block';
+    cont.innerHTML = renderError('No se pudo cargar la solicitud', 'Ocurrió un problema de conexión. Verifica tu internet e intenta recargar la página.');
+  }
+}
+
+function renderHeaderCard() {
+  const p = pvsoActual;
+  return `<div class="card">
+    <h2>${p.empresa || 'Solicitud PVSO'}</h2>
+    <p class="sub">Corrige únicamente los ítems que el Supervisor de Lado Aire (SLA) observó abajo.</p>
+    <div class="pvso-meta">
+      <span>${p.id}</span>
+      <span>${p.sede || ''}</span>
+      <span>${p.contacto || ''}</span>
+    </div>
+  </div>`;
+}
+
+function renderItemCard(itemName) {
+  const cols = ITEM_TO_COLS[itemName] || [];
+  const obs = pvsoActual.items_obs[itemName] || '';
+  const editableCols = cols.filter(c => !COLS_NO_EDITABLES[c] && c !== 'equipos_mayores' && c !== 'equipos_menores' && c !== 'equipo_altura' && c !== 'equipo_anchura' && c !== 'ruta_puntos');
+  const lockedCols = cols.filter(c => COLS_NO_EDITABLES[c]);
+  const tieneEquiposMayores = cols.includes('equipos_mayores');
+  const tieneEquiposMenores = cols.includes('equipos_menores');
+  const tieneAlturaAncho = cols.includes('equipo_altura') || cols.includes('equipo_anchura');
+
+  const fieldsHtml = editableCols.map(col => {
+    const val = pvsoActual[col] != null ? pvsoActual[col] : '';
+    const isLong = ['objeto', 'cronograma', 'area_cercamiento', 'senalizacion', 'rutas', 'zona'].includes(col);
+    return `<div class="field">
+      <label>${COL_LABEL[col] || col}</label>
+      ${isLong
+        ? `<textarea data-col="${col}" id="f-${col}">${escapeHtml(val)}</textarea>`
+        : `<input type="text" data-col="${col}" id="f-${col}" value="${escapeHtml(val)}"/>`}
+    </div>`;
+  }).join('');
+
+  const equiposMenoresHtml = tieneEquiposMenores ? renderEquiposMenores() : '';
+  const equiposMayoresHtml = tieneEquiposMayores ? renderEquiposMayores() : '';
+  const alturaAnchoHtml = tieneAlturaAncho ? `
+    <p style="font-size:12px;color:var(--gray-600);margin:0.5rem 0 0">Indica solo la altura y el ancho de tu equipo <strong>más alto / más ancho</strong> de la tabla de equipos mayores de arriba — no de cada equipo por separado.</p>
+    <div class="field">
+      <label>${COL_LABEL['equipo_altura'] || 'Altura del equipo'}</label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" step="0.01" min="0" data-col="equipo_altura" data-unidad="m" id="f-equipo_altura" value="${extraerNumero(pvsoActual.equipo_altura)}" placeholder="Ej. 2.80" style="flex:1"/>
+        <span style="font-size:13px;color:var(--gray-600)">metros</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>${COL_LABEL['equipo_anchura'] || 'Ancho del equipo'}</label>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" step="0.01" min="0" data-col="equipo_anchura" data-unidad="m" id="f-equipo_anchura" value="${extraerNumero(pvsoActual.equipo_anchura)}" placeholder="Ej. 2.20" style="flex:1"/>
+        <span style="font-size:13px;color:var(--gray-600)">metros</span>
+      </div>
+    </div>` : '';
+
+  const mapaRutasHtml = itemName === 'Rutas establecidas' ? `
+    <div class="field">
+      <button type="button" class="btn-add-row" onclick="toggleMapaRutas()" id="btn-toggle-mapa">✏️ Volver a trazar la ruta</button>
+      <div class="mapa-rutas-cont" id="mapa-rutas-cont" style="display:none">
+        <div id="mapa-rutas" style="height:100%"></div>
+      </div>
+      <div class="mapa-rutas-tip" id="mapa-rutas-tip" style="display:none">
+        Se cargó tu recorrido actual en azul. Haz clic en el mapa para <strong>agregar</strong> puntos nuevos al final del recorrido, o usa los botones de abajo para deshacer o reiniciar todo el trazado.
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          <button type="button" class="btn-add-row" onclick="deshacerPuntoRuta()">↩ Deshacer último punto</button>
+          <button type="button" class="btn-add-row" style="border-color:var(--danger);color:var(--danger);background:var(--danger-bg)" onclick="reiniciarRuta()">🗑 Reiniciar trazado</button>
+        </div>
+      </div>
+    </div>` : '';
+
+  const adjKeys = ITEM_ADJ_KEYS[itemName];
+  const adjuntoHtml = adjKeys
+    ? adjKeys.map(key => `<div class="field">
+        <label>${ADJ_LABEL[key] || key} — documento corregido</label>
+        <input type="file" data-adjkey="${key}" id="f-adj-${key}" accept=".pdf,.png,.jpg,.jpeg"/>
+      </div>`).join('')
+    : '';
+
+  const lockedHtml = lockedCols.length
+    ? `<div class="readonly-note">Este ítem incluye datos técnicos del mapa de rutas que no se pueden editar desde aquí. Si necesitas corregir el trazado de la ruta, contacta directamente al SLA de tu sede.</div>`
+    : '';
+
+  return `<div class="item-card">
+    <div class="item-hdr">
+      <span class="item-name">${itemName}</span>
+    </div>
+    ${obs ? `<div class="obs-box"><strong>Observación del SLA</strong>${escapeHtml(obs)}</div>` : ''}
+    ${fieldsHtml}
+    ${mapaRutasHtml}
+    ${equiposMenoresHtml}
+    ${equiposMayoresHtml}
+    ${alturaAnchoHtml}
+    ${adjuntoHtml}
+    ${lockedHtml}
+  </div>`;
+}
+
+function renderEquiposMenores() {
+  let lista = [];
+  try {
+    const raw = pvsoActual.equipos_menores;
+    lista = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+  } catch(e) { lista = []; }
+  if (!lista.length) lista = [{ tipo: '', cant: 1 }];
+
+  const rowsHtml = lista.map(item => renderEquipoMenorRow(item.tipo || '', item.cant != null ? item.cant : 1)).join('');
+  return `<div class="field">
+    <label>Equipos menores (tipo y cantidad)</label>
+    <div class="eq-rows" id="eq-menores-rows">${rowsHtml}</div>
+    <button type="button" class="btn-add-row" onclick="addEquipoMenorRow()">+ Agregar equipo</button>
+  </div>`;
+}
+
+function renderEquipoMenorRow(tipo, cant) {
+  return `<div class="eq-row">
+    <input type="text" class="eq-tipo" placeholder="Tipo de equipo (ej. Taladro)" value="${escapeHtml(tipo)}"/>
+    <input type="number" class="eq-cant" placeholder="Cant." min="1" value="${escapeHtml(cant)}"/>
+    <button type="button" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+function addEquipoMenorRow() {
+  const cont = document.getElementById('eq-menores-rows');
+  if (!cont) return;
+  cont.insertAdjacentHTML('beforeend', renderEquipoMenorRow('', 1));
+}
+
+function renderEquiposMayores() {
+  let lista = [];
+  try {
+    const raw = pvsoActual.equipos_mayores;
+    lista = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+  } catch(e) { lista = []; }
+  if (!lista.length) lista = [{ tipo: '', cant: 1 }];
+
+  const rowsHtml = lista.map(item => renderEquipoRow(item.tipo || '', item.cant != null ? item.cant : 1)).join('');
+  return `<div class="field">
+    <label>Equipos mayores (tipo y cantidad)</label>
+    <div class="eq-rows" id="eq-mayores-rows">${rowsHtml}</div>
+    <button type="button" class="btn-add-row" onclick="addEquipoRow()">+ Agregar equipo</button>
+  </div>`;
+}
+
+function renderEquipoRow(tipo, cant) {
+  return `<div class="eq-row">
+    <input type="text" class="eq-tipo" placeholder="Tipo de equipo (ej. Grúa telescópica)" value="${escapeHtml(tipo)}"/>
+    <input type="number" class="eq-cant" placeholder="Cant." min="1" value="${escapeHtml(cant)}"/>
+    <button type="button" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+function addEquipoRow() {
+  const cont = document.getElementById('eq-mayores-rows');
+  if (!cont) return;
+  cont.insertAdjacentHTML('beforeend', renderEquipoRow('', 1));
+}
+
+function renderError(title, msg) {
+  return `<div class="status-msg">
+    <div class="icon error-icon">⚠</div>
+    <h2>${title}</h2>
+    <p>${msg}</p>
+  </div>`;
+}
+
+function extraerNumero(val, max) {
+  max = max || 50; // ningún equipo mide más de 50m de alto/ancho — filtra datos viejos corruptos (ej. fechas)
+  const n = parseFloat(val);
+  return (isFinite(n) && n >= 0 && n <= max) ? n : '';
+}
+
+function toggleMapaRutas() {
+  const cont = document.getElementById('mapa-rutas-cont');
+  const tip = document.getElementById('mapa-rutas-tip');
+  const btn = document.getElementById('btn-toggle-mapa');
+  if (!cont) return;
+  const abrir = cont.style.display === 'none';
+  cont.style.display = abrir ? 'block' : 'none';
+  if (tip) tip.style.display = abrir ? 'block' : 'none';
+  if (btn) btn.textContent = abrir ? '✕ Cerrar mapa' : '✏️ Volver a trazar la ruta';
+  if (abrir && !mapaRutasInstance) {
+    setTimeout(inicializarMapaRutas, 50); // esperar a que el contenedor sea visible
+  } else if (abrir && mapaRutasInstance) {
+    setTimeout(() => mapaRutasInstance.invalidateSize(), 100);
+  }
+}
+
+function inicializarMapaRutas() {
+  let puntosExistentes = [];
+  try {
+    const raw = pvsoActual.ruta_puntos;
+    puntosExistentes = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : []);
+  } catch(e) { puntosExistentes = []; }
+  rutaPuntosCorreccion = puntosExistentes.slice();
+
+  const centro = rutaPuntosCorreccion.length
+    ? rutaPuntosCorreccion[Math.floor(rutaPuntosCorreccion.length / 2)]
+    : [-16.3420, -71.5680];
+  mapaRutasInstance = L.map('mapa-rutas', { center: centro, zoom: 16, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapaRutasInstance);
+
+  dibujarRutaCorreccion();
+  if (rutaPuntosCorreccion.length > 1) {
+    try { mapaRutasInstance.fitBounds(L.polyline(rutaPuntosCorreccion).getBounds(), { padding: [30, 30] }); } catch(e) {}
+  }
+
+  mapaRutasInstance.on('click', function(e) {
+    rutaPuntosCorreccion.push([e.latlng.lat, e.latlng.lng]);
+    dibujarRutaCorreccion();
+  });
+
+  setTimeout(() => mapaRutasInstance.invalidateSize(), 100);
+}
+
+function dibujarRutaCorreccion() {
+  if (!mapaRutasInstance) return;
+  rutaMarkersCorreccion.forEach(m => mapaRutasInstance.removeLayer(m));
+  rutaMarkersCorreccion = [];
+  if (rutaPolylineCorreccion) { mapaRutasInstance.removeLayer(rutaPolylineCorreccion); rutaPolylineCorreccion = null; }
+
+  rutaPuntosCorreccion.forEach(p => {
+    const marker = L.circleMarker(p, { radius: 5, color: '#185FA5', fillColor: '#185FA5', fillOpacity: 1 }).addTo(mapaRutasInstance);
+    rutaMarkersCorreccion.push(marker);
+  });
+  if (rutaPuntosCorreccion.length > 1) {
+    rutaPolylineCorreccion = L.polyline(rutaPuntosCorreccion, { color: '#185FA5', weight: 3, dashArray: '8,4' }).addTo(mapaRutasInstance);
+  }
+}
+
+function deshacerPuntoRuta() {
+  rutaPuntosCorreccion.pop();
+  dibujarRutaCorreccion();
+}
+
+function reiniciarRuta() {
+  if (!confirm('¿Borrar todo el trazado actual y empezar de cero?')) return;
+  rutaPuntosCorreccion = [];
+  dibujarRutaCorreccion();
+}
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+async function enviarCorreccion() {
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const payload = { modo: 'correccion', pvso_id_corregir: pvsoActual.id };
+  document.querySelectorAll('[data-col]').forEach(el => {
+    const col = el.getAttribute('data-col');
+    const formKey = FIELD_MAP_FORM[col] || col;
+    const unidad = el.getAttribute('data-unidad');
+    payload[formKey] = (unidad && el.value) ? `${el.value} ${unidad}` : el.value;
+  });
+
+  const inputsAdjunto = [...document.querySelectorAll('[data-adjkey]')];
+  const archivos = await Promise.all(inputsAdjunto.map(el => leerArchivoBase64(el.id)));
+  inputsAdjunto.forEach((el, i) => {
+    if (archivos[i]) payload['adjunto_' + el.getAttribute('data-adjkey') + '_b64'] = archivos[i];
+  });
+
+  if (mapaRutasInstance) {
+    payload[FIELD_MAP_FORM['ruta_puntos'] || 'ruta_puntos'] = JSON.stringify(rutaPuntosCorreccion);
+  }
+
+  const eqMenoresRows = document.getElementById('eq-menores-rows');
+  if (eqMenoresRows) {
+    const equiposMenores = [];
+    eqMenoresRows.querySelectorAll('.eq-row').forEach(row => {
+      const tipo = row.querySelector('.eq-tipo')?.value.trim() || '';
+      const cant = parseInt(row.querySelector('.eq-cant')?.value, 10) || 1;
+      if (tipo) equiposMenores.push({ tipo, cant });
+    });
+    payload[FIELD_MAP_FORM['equipos_menores'] || 'equipos_menores'] = JSON.stringify(equiposMenores);
+  }
+
+  const eqRows = document.getElementById('eq-mayores-rows');
+  if (eqRows) {
+    const equipos = [];
+    eqRows.querySelectorAll('.eq-row').forEach(row => {
+      const tipo = row.querySelector('.eq-tipo')?.value.trim() || '';
+      const cant = parseInt(row.querySelector('.eq-cant')?.value, 10) || 1;
+      if (tipo) equipos.push({ tipo, cant });
+    });
+    payload[FIELD_MAP_FORM['equipos_mayores'] || 'equipos_mayores'] = JSON.stringify(equipos);
+  }
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const stickyDone = document.getElementById('sticky-reminder');
+    if (stickyDone) stickyDone.style.display = 'none';
+    document.getElementById('content').innerHTML = `<div class="status-msg">
+      <div class="icon success-icon">✓</div>
+      <h2>Corrección enviada</h2>
+      <p>El SLA de Aeropuertos Andinos del Perú revisará los cambios y te notificará por correo. N° de referencia: <strong>${pvsoActual.id}</strong></p>
+    </div>`;
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Enviar corrección';
+    alert('No se pudo enviar la corrección. Verifica tu conexión e intenta nuevamente.');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

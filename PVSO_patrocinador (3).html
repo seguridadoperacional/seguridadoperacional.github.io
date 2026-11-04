@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Confirmación de patrocinio — Aeropuertos Andinos del Perú</title>
+<style>
+:root {
+  --aap-blue: #0D3B6E;
+  --aap-blue-mid: #185FA5;
+  --aap-blue-light: #E6F1FB;
+  --aap-gold: #C8960C;
+  --danger: #A32D2D;
+  --danger-bg: #FCEBEB;
+  --danger-border: #F09595;
+  --warning: #854F0B;
+  --warning-bg: #FAEEDA;
+  --warning-border: #EF9F27;
+  --success: #3B6D11;
+  --success-bg: #EAF3DE;
+  --success-border: #97C459;
+  --gray-50: #F7F6F3;
+  --gray-100: #EEECEA;
+  --gray-200: #D5D3CE;
+  --gray-400: #9A9690;
+  --gray-600: #5F5D58;
+  --gray-900: #1C1C1A;
+  --radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-900); font-size: 15px; line-height: 1.6; }
+a { color: var(--aap-blue-mid); }
+.header { background: var(--aap-blue); }
+.header-inner { max-width: 720px; margin: 0 auto; padding: 1.25rem 2rem; display: flex; align-items: center; gap: 1rem; }
+.header-logo { height: 46px; width: auto; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 4px 10px; }
+.header-text h1 { color: white; font-size: 15px; font-weight: 600; }
+.header-text p { color: rgba(255,255,255,0.65); font-size: 12px; margin-top: 1px; }
+.header-strip { background: var(--aap-gold); height: 3px; }
+.page { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); }
+.card h2 { font-size: 17px; font-weight: 600; color: var(--aap-blue); margin-bottom: 0.5rem; }
+.card p.sub { font-size: 13px; color: var(--gray-600); }
+.pvso-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 0.75rem; font-size: 12px; color: var(--gray-600); font-family: 'JetBrains Mono', monospace; }
+.pvso-meta span { background: var(--gray-50); border: 0.5px solid var(--gray-200); border-radius: 100px; padding: 3px 10px; }
+.criterios-box { background: var(--warning-bg); border: 0.5px solid var(--warning-border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem; font-size: 13px; color: var(--warning); }
+.criterios-box p { margin-bottom: 8px; }
+.criterios-box p:last-child { margin-bottom: 0; }
+.turno-card { background: white; border-radius: 12px; border: 0.5px solid var(--gray-200); padding: 1.25rem 1.5rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); position: relative; }
+.turno-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.turno-hdr span { font-size: 13px; font-weight: 600; color: var(--aap-blue); text-transform: uppercase; letter-spacing: 0.04em; }
+.btn-remove-turno { background: var(--danger-bg); border: 0.5px solid var(--danger-border); color: var(--danger); border-radius: var(--radius); width: 30px; height: 30px; cursor: pointer; font-size: 14px; }
+.field { margin-bottom: 0.85rem; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 4px; }
+.field input, .field select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius); font-family: inherit; font-size: 14px; color: var(--gray-900); background: white; }
+.field input:focus, .field select:focus { outline: none; border-color: var(--aap-blue-mid); box-shadow: 0 0 0 3px var(--aap-blue-light); }
+.field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .field-group { grid-template-columns: 1fr; } }
+.error-msg { display: none; font-size: 12px; color: var(--danger); margin-top: 4px; }
+.error-msg.visible { display: block; }
+.btn-add-row { background: var(--aap-blue-light); border: 0.5px solid var(--aap-blue-mid); color: var(--aap-blue-mid); border-radius: var(--radius); padding: 0.6rem 1rem; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; width: 100%; margin-bottom: 1rem; }
+.confirm-box { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; cursor: pointer; margin-bottom: 1rem; }
+.btn-submit { width: 100%; background: var(--aap-blue); color: white; border: none; border-radius: var(--radius); padding: 0.9rem; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn-submit:hover { background: var(--aap-blue-mid); }
+.btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.status-msg { text-align: center; padding: 3rem 1.5rem; }
+.status-msg .icon { font-size: 40px; margin-bottom: 1rem; }
+.status-msg h2 { font-size: 18px; margin-bottom: 0.5rem; }
+.status-msg p { color: var(--gray-600); font-size: 14px; }
+.success-icon { color: var(--success); }
+.error-icon { color: var(--danger); }
+#loading { text-align: center; padding: 4rem 1.5rem; color: var(--gray-600); }
+.footer-note { text-align: center; font-size: 11px; color: var(--gray-400); margin-top: 1rem; }
+.btn-secondary { width: 100%; background: white; color: var(--danger); border: 1px solid var(--danger-border); border-radius: var(--radius); padding: 0.75rem; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 0.75rem; }
+.field textarea { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius); font-family: inherit; font-size: 14px; min-height: 80px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo"><img src="data:image/png;base64,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" alt="Aeropuertos Andinos del Perú" style="height:36px;width:auto;display:block"/></div>
+    <div class="header-text">
+      <h1>Aeropuertos Andinos del Perú</h1>
+      <p>Confirmación de patrocinio — PVSO</p>
+    </div>
+  </div>
+</div>
+<div class="header-strip"></div>
+
+<div class="page" id="page-container">
+  <div id="loading">Cargando datos de la solicitud...</div>
+  <div id="content" style="display:none"></div>
+</div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwLLrTb5zJ4wJGDdDwEpz3eWAsNAkCOR5pmxu7f5XZ0jNlkisuMPp8NK-0zfwgUGZuX/exec';
+const ETIQUETA = {
+  ORG_EXTERNA: 'Organización externa (trabajo propio)',
+  CONTRATISTA_ORG: 'Contratista de una organización externa',
+  CONTRATISTA_AAP: 'Contratista de AAP'
+};
+let pvsoActual = null;
+let turnoCount = 0;
+
+// Fecha y hora legibles (dd/mm/aaaa hh:mm) en hora de Lima. Acepta "2026-07-23T15:20", ISO con Z, número de Excel o Date.
+function fmtFecha(v) {
+  if (v === null || v === undefined || v === '') return '—';
+  try {
+    if (typeof v === 'number' || (typeof v === 'string' && /^\d{5}(\.\d+)?$/.test(v.trim()))) {
+      const d0 = new Date((parseFloat(v) - 25569) * 86400000), p2 = n => String(n).padStart(2, '0');
+      return p2(d0.getUTCDate()) + '/' + p2(d0.getUTCMonth() + 1) + '/' + d0.getUTCFullYear() + ' ' + p2(d0.getUTCHours()) + ':' + p2(d0.getUTCMinutes());
+    }
+    const s = String(v).trim();
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+    if (m) return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return m[3] + '/' + m[2] + '/' + m[1];
+    const d = new Date(s);
+    if (isNaN(d)) return s;
+    const o = {}; new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d).forEach(x => { o[x.type] = x.value; });
+    return o.day + '/' + o.month + '/' + o.year + ' ' + o.hour + ':' + o.minute;
+  } catch (e) { return String(v); }
+}
+function getParam(name) { return new URLSearchParams(window.location.search).get(name); }
+function escapeHtml(str) {
+  if (str == null) return '';
+  return str.toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function renderError(title, msg) {
+  return `<div class="status-msg"><div class="icon error-icon">⚠</div><h2>${title}</h2><p>${msg}</p></div>`;
+}
+
+async function init() {
+  const id = getParam('id');
+  const cont = document.getElementById('content');
+  const loading = document.getElementById('loading');
+  if (!id) {
+    loading.style.display = 'none'; cont.style.display = 'block';
+    cont.innerHTML = renderError('Enlace incompleto', 'Este enlace no incluye el código del PVSO. Solicita que te reenvíen el correo original.');
+    return;
+  }
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?action=obtener&id=' + encodeURIComponent(id));
+    const json = await resp.json();
+    loading.style.display = 'none'; cont.style.display = 'block';
+    if (!json.ok || !json.data) {
+      cont.innerHTML = renderError('PVSO no encontrado', `El código <strong>${escapeHtml(id)}</strong> no existe en el sistema. Verifica el enlace.`);
+      return;
+    }
+    pvsoActual = json.data;
+    if (pvsoActual.estado !== 'PENDIENTE_CONFIRMACION_PATROCINADOR') {
+      cont.innerHTML = renderHeaderCard() + renderError('Ya no es necesario', 'Esta solicitud ya fue atendida (confirmada o rechazada) o cambió de estado. No es necesario hacer nada más aquí.');
+      return;
+    }
+    cont.innerHTML = renderHeaderCard() + renderCriterios() +
+      `<div class="card">
+         <h2 style="font-size:15px">Quién confirma</h2>
+         <p class="sub" style="margin-bottom:.75rem">Tu nombre, cargo, correo, la fecha y la hora quedan registrados como constancia de la confirmación.</p>
+         <div class="field-group">
+           <div class="field"><label>Nombres y apellidos</label><input type="text" id="pat-nombre" placeholder="Nombre completo"/></div>
+           <div class="field"><label>Cargo</label><input type="text" id="pat-cargo" placeholder="Ej. Jefe de estación"/></div>
+         </div>
+         <div class="field"><label>Correo electrónico</label><input type="email" id="pat-correo" value="${escapeHtml(pvsoActual.correo_organizacion || '')}"/></div>
+         <div class="error-msg" id="err-pat">Completa nombre y un correo válido</div>
+       </div>
+       <div id="turnos-cont"></div>
+       <button type="button" class="btn-add-row" onclick="agregarTurno()">+ Agregar otro turno / supervisor</button>
+       <div class="card">
+         <label class="confirm-box">
+           <input type="checkbox" id="confirma-decl" style="margin-top:3px"/>
+           <span>Declaro que <strong>${escapeHtml(pvsoActual.organizacion_principal || 'mi organización')}</strong> reconoce y respalda este trabajo, que el(los) supervisor(es) designado(s) cumple(n) con los criterios indicados y que estará(n) presente(s) supervisando la actividad de forma continua durante su turno.</span>
+         </label>
+         <div class="error-msg" id="err-decl">Debes aceptar la declaración para continuar</div>
+         <button type="button" class="btn-submit" id="btn-enviar" onclick="confirmar()">Confirmar patrocinio</button>
+         <button type="button" class="btn-secondary" onclick="document.getElementById('bloque-rechazo').style.display='block'">No reconozco este trabajo</button>
+         <div id="bloque-rechazo" style="display:none;margin-top:1rem">
+           <div class="field"><label>Motivo (obligatorio)</label><textarea id="motivo-rechazo" placeholder="Ej. Mi organización no solicitó este trabajo"></textarea></div>
+           <div class="error-msg" id="err-motivo">Indica el motivo y completa tu nombre y correo arriba</div>
+           <button type="button" class="btn-secondary" id="btn-rechazar" onclick="rechazar()">Enviar rechazo</button>
+         </div>
+       </div>
+       <p class="footer-note">Al confirmar, la solicitud pasa al Supervisor de Lado Aire (SLA) de AAP para su revisión.</p>`;
+    agregarTurno();
+  } catch (e) {
+    loading.style.display = 'none'; cont.style.display = 'block';
+    cont.innerHTML = renderError('Error de conexión', 'No se pudo cargar la información. Intenta nuevamente en unos minutos.');
+  }
+}
+
+function renderHeaderCard() {
+  const p = pvsoActual;
+  return `<div class="card">
+    <h2>${escapeHtml(p.empresa || 'Solicitud PVSO')}</h2>
+    <p class="sub">Confirma que tu organización respalda este trabajo no rutinario en lado aire y designa a tu supervisor en campo.</p>
+    <div class="pvso-meta">
+      <span>${escapeHtml(p.id)}</span><span>${escapeHtml(p.sede || '')}</span><span>${escapeHtml(p.zona || '')}</span>
+    </div>
+    <div class="pvso-meta">
+      <span>${escapeHtml(ETIQUETA[p.tipo_solicitante] || p.tipo_solicitante || '')}</span>
+      <span>Organización: ${escapeHtml(p.organizacion_principal || '—')}</span>
+    </div>
+    <div class="pvso-meta">
+      <span>Ingreso: ${escapeHtml(fmtFecha(p.fecha_ingreso_solicitada))}</span>
+      <span>Salida: ${escapeHtml(fmtFecha(p.fecha_salida_solicitada))}</span>
+    </div>
+    <p class="sub" style="margin-top:.75rem"><strong>Objeto:</strong> ${escapeHtml(p.objeto || '—')}</p>
+    <p class="sub"><strong>Contacto del solicitante:</strong> ${escapeHtml(p.contacto || '—')} — ${escapeHtml(p.email || '')}</p>
+  </div>`;
+}
+
+function renderCriterios() {
+  return `<div class="criterios-box">
+    <p>El supervisor en campo de tu organización debe conocer las actividades operativas del lado aire (fraseología, permisos, reconocimiento de rutas, restricciones, etc.), ser personal de esta sede y estar físicamente presente supervisando la actividad de forma continua. Si el trabajo abarca más de un turno, designa uno por cada turno.</p>
+    <p style="margin-bottom:0">Aeropuertos Andinos del Perú realizará verificaciones puntuales (inicio, durante y cierre, según el nivel de riesgo). Esas verificaciones no reemplazan la supervisión continua de tu organización.</p>
+  </div>`;
+}
+
+function agregarTurno() {
+  turnoCount++;
+  const idx = turnoCount;
+  const div = document.createElement('div');
+  div.className = 'turno-card';
+  div.id = 'turno-' + idx;
+  div.innerHTML = `
+    <div class="turno-hdr"><span>Supervisor en campo ${idx}</span>
+      ${idx > 1 ? `<button type="button" class="btn-remove-turno" onclick="quitarTurno(${idx})">✕</button>` : ''}
+    </div>
+    <div class="field-group">
+      <div class="field"><label>Turno</label>
+        <select class="sup-turno">
+          <option value="Alfa (día)">Alfa (día)</option>
+          <option value="Bravo (tarde)">Bravo (tarde)</option>
+          <option value="Charlie (noche)">Charlie (noche)</option>
+          <option value="Único">Único / todo el horario</option>
+        </select>
+      </div>
+      <div class="field"><label>N° celular</label><input type="text" class="sup-celular" placeholder="9XXXXXXXX"/></div>
+    </div>
+    <div class="field"><label>Nombres y apellidos del supervisor</label><input type="text" class="sup-nombre" placeholder="Nombre completo"/></div>
+    <div class="error-msg" style="display:none">Completa nombre y celular de este supervisor</div>`;
+  document.getElementById('turnos-cont').appendChild(div);
+}
+function quitarTurno(idx) { const el = document.getElementById('turno-' + idx); if (el) el.remove(); }
+
+function leerPatrocinador() {
+  const nombre = document.getElementById('pat-nombre').value.trim();
+  const cargo = document.getElementById('pat-cargo').value.trim();
+  const correo = document.getElementById('pat-correo').value.trim();
+  const ok = nombre && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+  document.getElementById('err-pat').classList.toggle('visible', !ok);
+  return ok ? { nombre, cargo, correo } : null;
+}
+
+async function enviar(payload, btn, textoBtn) {
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    const json = await resp.json();
+    if (json.ok) return json;
+    alert('Error al enviar: ' + (json.error || 'intenta nuevamente'));
+  } catch (e) { alert('Error de conexión, intenta nuevamente.'); }
+  btn.disabled = false; btn.textContent = textoBtn;
+  return null;
+}
+
+async function confirmar() {
+  const btn = document.getElementById('btn-enviar');
+  const pat = leerPatrocinador();
+  let falta = !pat;
+  const supervisores = [];
+  document.querySelectorAll('.turno-card').forEach(card => {
+    const nombre = card.querySelector('.sup-nombre').value.trim();
+    const celular = card.querySelector('.sup-celular').value.trim();
+    const err = card.querySelector('.error-msg');
+    if (!nombre || !celular) { falta = true; err.style.display = 'block'; return; }
+    err.style.display = 'none';
+    supervisores.push({ turno: card.querySelector('.sup-turno').value, nombre, celular });
+  });
+  const decl = document.getElementById('confirma-decl').checked;
+  document.getElementById('err-decl').classList.toggle('visible', !decl);
+  if (falta || !decl || !supervisores.length) return;
+  const json = await enviar({ modo: 'confirmarPatrocinador', pvso_id: pvsoActual.id, ...pat, supervisores: JSON.stringify(supervisores), declaracion: true }, btn, 'Confirmar patrocinio');
+  if (json) {
+    document.getElementById('content').innerHTML = `<div class="status-msg"><div class="icon success-icon">✓</div><h2>Patrocinio confirmado</h2>
+      <p>El Supervisor de Lado Aire fue notificado y continuará con la revisión de la solicitud <strong>${escapeHtml(pvsoActual.id)}</strong>.</p></div>`;
+  }
+}
+
+async function rechazar() {
+  const btn = document.getElementById('btn-rechazar');
+  const pat = leerPatrocinador();
+  const motivo = document.getElementById('motivo-rechazo').value.trim();
+  document.getElementById('err-motivo').classList.toggle('visible', !motivo || !pat);
+  if (!pat || !motivo) return;
+  if (!confirm('¿Confirmas que NO reconoces este trabajo? La solicitud quedará cerrada.')) return;
+  const json = await enviar({ modo: 'confirmarPatrocinador', pvso_id: pvsoActual.id, ...pat, rechazar: true, motivo }, btn, 'Enviar rechazo');
+  if (json) {
+    document.getElementById('content').innerHTML = `<div class="status-msg"><div class="icon success-icon">✓</div><h2>Rechazo registrado</h2>
+      <p>Se informó al solicitante y al SLA. La solicitud <strong>${escapeHtml(pvsoActual.id)}</strong> quedó cerrada.</p></div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
